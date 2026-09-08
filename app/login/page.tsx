@@ -17,7 +17,15 @@ export default function LoginPage(){
   async function submit(e:FormEvent){
     e.preventDefault(); setBusy(true); setMessage('')
     if(mode==='signup'){
-      const {error}=await supabase.auth.signUp({email,password,options:{data:{company_name:company}}})
+      const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/` : undefined
+      const {error}=await supabase.auth.signUp({
+        email,
+        password,
+        options:{
+          data:{company_name:company},
+          emailRedirectTo:redirectTo
+        }
+      })
       setBusy(false)
       if(error)return setMessage(error.message)
       setMessage('Account created. Check your email if confirmation is enabled, then sign in.')
