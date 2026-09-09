@@ -25,7 +25,8 @@ export async function POST(req: Request) {
 
     const instructions = instructionsByMode[mode] || instructionsByMode.general
     const openAiKey = process.env.OPENAI_API_KEY
-    const gatewayToken = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
+    const requestOidcToken = req.headers.get('x-vercel-oidc-token') || ''
+    const gatewayToken = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN || requestOidcToken
 
     let url = ''
     let model = ''
@@ -43,7 +44,8 @@ export async function POST(req: Request) {
       authToken = gatewayToken
       payload = {
         model,
-        input: [{ type: 'message', role: 'user', content: `${instructions}\n\nContractor input:\n${input}` }],
+        instructions,
+        input: [{ type: 'message', role: 'user', content: input }],
         stream: false
       }
     } else {
