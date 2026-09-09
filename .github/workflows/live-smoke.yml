@@ -6,6 +6,11 @@ on:
     paths:
       - '.github/workflows/live-smoke.yml'
       - 'tests/live-smoke.mjs'
+      - 'app/**'
+      - 'lib/**'
+      - 'middleware.ts'
+      - 'package.json'
+      - 'next.config.mjs'
 
 jobs:
   smoke:
@@ -20,6 +25,8 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install chromium
+      - name: Wait for production deployment
+        run: sleep 20
       - name: Run production browser smoke test
         env:
           BASE_URL: https://build-flowhq2.vercel.app
