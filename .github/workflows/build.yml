@@ -1,9 +1,11 @@
 name: BuildFlow Build Check
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,10 +14,16 @@ jobs:
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: test-placeholder-key
       OPENAI_API_KEY: test-placeholder-key
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-      - run: npm install
-      - run: npm run build
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build production app
+        run: npm run build
