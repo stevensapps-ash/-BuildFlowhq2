@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { generateText } from 'ai'
 
 const instructionsByMode: Record<string, string> = {
   estimate: `You are BuildFlow AI, an estimating assistant for small construction companies. Generate a professional planning estimate from the contractor's description. Return ONLY valid JSON with keys: scope (string[]), materials (string[]), labor (string[]), assumptions (string[]), amount (number). Include practical quantities/allowances when reasonable. Never claim supplier pricing is guaranteed. Clearly separate assumptions and exclusions. Do not generate permit-ready architectural claims.`,
@@ -9,11 +10,19 @@ const instructionsByMode: Record<string, string> = {
   general: `You are BuildFlow AI, an operations assistant for contractors. Produce a practical draft that the business owner can review and edit.`
 }
 
-function responseText(data: any) {
+async function directOpenAI(apiKey: string, model: string, instructions: string, input: string) {
+  const response = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, instructions, input, store: false })
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(`OPENAI_${response.status}:${data?.error?.message || 'request failed'}`)
   if (typeof data?.output_text === 'string' && data.output_text.trim()) return data.output_text.trim()
   const parts = Array.isArray(data?.output) ? data.output.flatMap((item: any) => Array.isArray(item?.content) ? item.content : []) : []
   const text = parts.find((part: any) => (part?.type === 'output_text' || part?.type === 'text') && typeof part?.text === 'string')?.text
-  return typeof text === 'string' ? text.trim() : ''
+  if (!text?.trim()) throw new Error('OPENAI_EMPTY_RESPONSE')
+  return text.trim()
 }
 
 export async function POST(req: Request) {
@@ -25,50 +34,26 @@ export async function POST(req: Request) {
 
     const instructions = instructionsByMode[mode] || instructionsByMode.general
     const openAiKey = process.env.OPENAI_API_KEY
-    const requestOidcToken = req.headers.get('x-vercel-oidc-token') || ''
-    const gatewayToken = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN || requestOidcToken
-
-    let url = ''
-    let model = ''
-    let payload: Record<string, unknown>
-    let authToken = ''
 
     if (openAiKey) {
-      url = 'https://api.openai.com/v1/responses'
-      model = process.env.OPENAI_MODEL || 'gpt-5.6-luna'
-      authToken = openAiKey
-      payload = { model, instructions, input, store: false }
-    } else if (gatewayToken) {
-      url = 'https://ai-gateway.vercel.sh/v1/responses'
-      model = process.env.AI_GATEWAY_MODEL || 'openai/gpt-5.6-luna'
-      authToken = gatewayToken
-      payload = {
-        model,
-        instructions,
-        input: [{ type: 'message', role: 'user', content: input }],
-        stream: false
-      }
-    } else {
-      return NextResponse.json({ error: 'AI_NOT_CONFIGURED' }, { status: 503 })
+      const text = await directOpenAI(openAiKey, process.env.OPENAI_MODEL || 'gpt-5.6-luna', instructions, input)
+      return NextResponse.json({ text, provider: 'openai' })
     }
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    const model = process.env.AI_GATEWAY_MODEL || 'openai/gpt-5.6-luna'
+    const { text } = await generateText({
+      model,
+      system: instructions,
+      prompt: input
     })
-
-    const data = await response.json().catch(() => ({}))
-    if (!response.ok) {
-      console.error('BuildFlow AI request failed', response.status, data?.error?.message || data?.error || 'Unknown error')
-      return NextResponse.json({ error: 'AI_REQUEST_FAILED' }, { status: response.status })
+    if (!text?.trim()) return NextResponse.json({ error: 'AI_EMPTY_RESPONSE' }, { status: 502 })
+    return NextResponse.json({ text: text.trim(), provider: 'vercel-ai-gateway' })
+  } catch (error: any) {
+    const message = String(error?.message || error || '')
+    console.error('BuildFlow AI server error', message)
+    if (/credit|payment|billing|forbidden|unauthorized|403/i.test(message)) {
+      return NextResponse.json({ error: 'AI_GATEWAY_ACCESS_REQUIRED' }, { status: 503 })
     }
-
-    const text = responseText(data)
-    if (!text) return NextResponse.json({ error: 'AI_EMPTY_RESPONSE' }, { status: 502 })
-    return NextResponse.json({ text, provider: openAiKey ? 'openai' : 'vercel-ai-gateway' })
-  } catch (error) {
-    console.error('BuildFlow AI server error', error)
-    return NextResponse.json({ error: 'AI_SERVER_ERROR' }, { status: 500 })
+    return NextResponse.json({ error: 'AI_REQUEST_FAILED' }, { status: 502 })
   }
 }
