@@ -9,8 +9,12 @@ export async function POST(req: Request) {
     }
 
     const mode = String(body.mode || 'general')
-    const input = String(body.input || '')
-    const model = process.env.OPENAI_MODEL || 'gpt-6-astra'
+    const input = String(body.input || '').trim()
+    if (!input) {
+      return NextResponse.json({ error: 'AI_INPUT_REQUIRED' }, { status: 400 })
+    }
+
+    const model = process.env.OPENAI_MODEL || 'gpt-5.6-luna'
 
     const instructionsByMode: Record<string, string> = {
       estimate: `You are BuildFlow AI, an estimating assistant for small construction companies. Generate a professional planning estimate from the contractor's description. Return ONLY valid JSON with keys: scope (string[]), materials (string[]), labor (string[]), assumptions (string[]), amount (number). Include practical quantities/allowances when reasonable. Never claim supplier pricing is guaranteed. Clearly separate assumptions and exclusions. Do not generate permit-ready architectural claims.`,
@@ -24,7 +28,7 @@ export async function POST(req: Request) {
     const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -37,12 +41,17 @@ export async function POST(req: Request) {
 
     const data = await response.json()
     if (!response.ok) {
-      return NextResponse.json({ error: 'AI_REQUEST_FAILED', details: data }, { status: response.status })
+      console.error('BuildFlow AI request failed', response.status, data?.error?.message || data?.error || 'Unknown error')
+      return NextResponse.json({ error: 'AI_REQUEST_FAILED' }, { status: response.status })
     }
 
     const text = data.output_text || data.output?.flatMap((item: any) => item.content || []).find((c: any) => c.type === 'output_text')?.text || ''
+    if (!text) {
+      return NextResponse.json({ error: 'AI_EMPTY_RESPONSE' }, { status: 502 })
+    }
     return NextResponse.json({ text })
   } catch (error) {
+    console.error('BuildFlow AI server error', error)
     return NextResponse.json({ error: 'AI_SERVER_ERROR' }, { status: 500 })
   }
 }
