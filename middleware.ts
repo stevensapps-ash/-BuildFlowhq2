@@ -22,7 +22,8 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   const isAuthRoute = path.startsWith('/login')
   const isResetRoute = path.startsWith('/reset-password')
-  const isPublicRoute = isAuthRoute || isResetRoute || path.startsWith('/api/health') || path === '/manifest.webmanifest' || path === '/sw.js' || path === '/buildflow-icon.svg'
+  const isLandingRoute = path.startsWith('/welcome')
+  const isPublicRoute = isAuthRoute || isResetRoute || isLandingRoute || path.startsWith('/api/health') || path === '/manifest.webmanifest' || path === '/sw.js' || path === '/buildflow-icon.svg'
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
