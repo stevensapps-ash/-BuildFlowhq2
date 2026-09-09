@@ -25,6 +25,14 @@ async function directOpenAI(apiKey: string, model: string, instructions: string,
   return text.trim()
 }
 
+function safeDiagnostic(error: any) {
+  const raw = String(error?.message || error?.responseBody || error || '')
+  return raw
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [redacted]')
+    .replace(/eyJ[A-Za-z0-9._-]+/g, '[redacted-token]')
+    .slice(0, 240)
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -41,19 +49,15 @@ export async function POST(req: Request) {
     }
 
     const model = process.env.AI_GATEWAY_MODEL || 'openai/gpt-5.6-luna'
-    const { text } = await generateText({
-      model,
-      system: instructions,
-      prompt: input
-    })
+    const { text } = await generateText({ model, system: instructions, prompt: input })
     if (!text?.trim()) return NextResponse.json({ error: 'AI_EMPTY_RESPONSE' }, { status: 502 })
     return NextResponse.json({ text: text.trim(), provider: 'vercel-ai-gateway' })
   } catch (error: any) {
-    const message = String(error?.message || error || '')
-    console.error('BuildFlow AI server error', message)
-    if (/credit|payment|billing|forbidden|unauthorized|403/i.test(message)) {
-      return NextResponse.json({ error: 'AI_GATEWAY_ACCESS_REQUIRED' }, { status: 503 })
+    const detail = safeDiagnostic(error)
+    console.error('BuildFlow AI server error', detail)
+    if (/credit|payment|billing|forbidden|unauthorized|403/i.test(detail)) {
+      return NextResponse.json({ error: 'AI_GATEWAY_ACCESS_REQUIRED', detail }, { status: 503 })
     }
-    return NextResponse.json({ error: 'AI_REQUEST_FAILED' }, { status: 502 })
+    return NextResponse.json({ error: 'AI_REQUEST_FAILED', detail }, { status: 502 })
   }
 }
