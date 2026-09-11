@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { generateText } from 'ai'
+import { createLocalBuildPlan } from '@/lib/local-build-plan'
 
 const instructionsByMode: Record<string, string> = {
   estimate: `You are BuildFlow AI, an estimating assistant for small construction companies. Generate a professional planning estimate from the contractor's description. Return ONLY valid JSON with keys: scope (string[]), materials (string[]), labor (string[]), assumptions (string[]), amount (number). Include practical quantities/allowances when reasonable. Never claim supplier pricing is guaranteed. Clearly separate assumptions and exclusions. Do not generate permit-ready architectural claims.`,
@@ -41,6 +42,23 @@ function safeMessage(error: unknown) {
 
 function looksLikeAccessFailure(message: string) {
   return /credit card|credit|payment|billing|forbidden|unauthorized|401|403|quota|insufficient_quota/i.test(message)
+}
+
+function field(input: string, label: string) {
+  const line = input.split('\n').find((item) => item.toLowerCase().startsWith(`${label.toLowerCase()}:`))
+  return line ? line.slice(line.indexOf(':') + 1).trim() : ''
+}
+
+function localBuildPlanResponse(input: string) {
+  const laborText = field(input, 'Labor rate')
+  const laborMatch = laborText.match(/\$?([0-9]+(?:\.[0-9]+)?)/)
+  const draft = createLocalBuildPlan({
+    project: field(input, 'Project') || 'Build Plan',
+    description: field(input, 'Job description') || input,
+    measurements: field(input, 'Measurements / field notes'),
+    laborRate: laborMatch ? Number(laborMatch[1]) : undefined,
+  })
+  return NextResponse.json({ text: JSON.stringify(draft), provider: 'local-planning' })
 }
 
 export async function POST(req: Request) {
@@ -88,6 +106,8 @@ export async function POST(req: Request) {
       failures.push({ provider: 'vercel-ai-gateway', message })
       console.error('BuildFlow AI Gateway failed', message)
     }
+
+    if (mode === 'build_plan') return localBuildPlanResponse(input)
 
     const accessBlocked = failures.some((failure) => looksLikeAccessFailure(failure.message))
     return NextResponse.json(
