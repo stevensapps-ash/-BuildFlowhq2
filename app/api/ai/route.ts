@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { generateText } from 'ai'
 import { createLocalBuildPlan } from '@/lib/local-build-plan'
+import { createClient } from '@/lib/supabase/server'
 
 const instructionsByMode: Record<string, string> = {
   estimate: `You are BuildFlow AI, an estimating assistant for small construction companies. Generate a professional planning estimate from the contractor's description. Return ONLY valid JSON with keys: scope (string[]), materials (string[]), labor (string[]), assumptions (string[]), amount (number). Include practical quantities/allowances when reasonable. Never claim supplier pricing is guaranteed. Clearly separate assumptions and exclusions. Do not generate permit-ready architectural claims.`,
@@ -13,6 +14,11 @@ const instructionsByMode: Record<string, string> = {
 }
 
 type ProviderFailure = { provider: string; message: string }
+type Usage = { inputTokens: number; outputTokens: number; estimatedCostUsd: number }
+
+function calculateLunaCost(inputTokens = 0, outputTokens = 0) {
+  return Number(((inputTokens / 1_000_000) * 0.2 + (outputTokens / 1_000_000) * 1.2).toFixed(8))
+}
 
 async function directOpenAI(apiKey: string, model: string, instructions: string, input: string) {
   const response = await fetch('https://api.openai.com/v1/responses', {
@@ -23,17 +29,49 @@ async function directOpenAI(apiKey: string, model: string, instructions: string,
 
   const data = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(`OPENAI_${response.status}:${data?.error?.message || 'request failed'}`)
-  if (typeof data?.output_text === 'string' && data.output_text.trim()) return data.output_text.trim()
 
-  const parts = Array.isArray(data?.output)
-    ? data.output.flatMap((item: any) => (Array.isArray(item?.content) ? item.content : []))
-    : []
-  const text = parts.find(
-    (part: any) => (part?.type === 'output_text' || part?.type === 'text') && typeof part?.text === 'string'
-  )?.text
+  let text = typeof data?.output_text === 'string' ? data.output_text.trim() : ''
+  if (!text) {
+    const parts = Array.isArray(data?.output)
+      ? data.output.flatMap((item: any) => (Array.isArray(item?.content) ? item.content : []))
+      : []
+    text = parts.find(
+      (part: any) => (part?.type === 'output_text' || part?.type === 'text') && typeof part?.text === 'string'
+    )?.text?.trim() || ''
+  }
+  if (!text) throw new Error('OPENAI_EMPTY_RESPONSE')
 
-  if (!text?.trim()) throw new Error('OPENAI_EMPTY_RESPONSE')
-  return text.trim()
+  const inputTokens = Number(data?.usage?.input_tokens || 0)
+  const outputTokens = Number(data?.usage?.output_tokens || 0)
+  return { text, usage: { inputTokens, outputTokens, estimatedCostUsd: calculateLunaCost(inputTokens, outputTokens) } }
+}
+
+async function recordUsage(feature: string, provider: string, model: string, usage: Usage) {
+  try {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data: membership } = await supabase
+      .from('company_members')
+      .select('company_id')
+      .eq('user_id', user.id)
+      .limit(1)
+      .maybeSingle()
+    if (!membership?.company_id) return
+    await supabase.from('ai_usage_events').insert({
+      company_id: membership.company_id,
+      user_id: user.id,
+      feature,
+      provider,
+      model,
+      input_tokens: usage.inputTokens,
+      output_tokens: usage.outputTokens,
+      estimated_cost_usd: usage.estimatedCostUsd,
+      credits_charged: 0
+    })
+  } catch (error) {
+    console.error('BuildFlow usage tracking failed', safeMessage(error))
+  }
 }
 
 function safeMessage(error: unknown) {
@@ -49,7 +87,7 @@ function field(input: string, label: string) {
   return line ? line.slice(line.indexOf(':') + 1).trim() : ''
 }
 
-function localBuildPlanResponse(input: string) {
+async function localBuildPlanResponse(input: string) {
   const laborText = field(input, 'Labor rate')
   const laborMatch = laborText.match(/\$?([0-9]+(?:\.[0-9]+)?)/)
   const draft = createLocalBuildPlan({
@@ -58,7 +96,9 @@ function localBuildPlanResponse(input: string) {
     measurements: field(input, 'Measurements / field notes'),
     laborRate: laborMatch ? Number(laborMatch[1]) : undefined,
   })
-  return NextResponse.json({ text: JSON.stringify(draft), provider: 'local-planning' })
+  const usage = { inputTokens: 0, outputTokens: 0, estimatedCostUsd: 0 }
+  await recordUsage('build_plan', 'local-planning', 'local', usage)
+  return NextResponse.json({ text: JSON.stringify(draft), provider: 'local-planning', usage })
 }
 
 export async function POST(req: Request) {
@@ -73,16 +113,13 @@ export async function POST(req: Request) {
 
     const instructions = instructionsByMode[mode] || instructionsByMode.general
     const openAiKey = process.env.OPENAI_API_KEY
+    const openAiModel = process.env.OPENAI_MODEL || 'gpt-5.6-luna'
 
     if (openAiKey) {
       try {
-        const text = await directOpenAI(
-          openAiKey,
-          process.env.OPENAI_MODEL || 'gpt-5.6-luna',
-          instructions,
-          input
-        )
-        return NextResponse.json({ text, provider: 'openai' })
+        const result = await directOpenAI(openAiKey, openAiModel, instructions, input)
+        await recordUsage(mode, 'openai', openAiModel, result.usage)
+        return NextResponse.json({ text: result.text, provider: 'openai', usage: result.usage })
       } catch (error) {
         const message = safeMessage(error)
         failures.push({ provider: 'openai', message })
@@ -93,14 +130,14 @@ export async function POST(req: Request) {
     }
 
     try {
-      const { text } = await generateText({
-        model: process.env.AI_GATEWAY_MODEL || 'openai/gpt-5.6-luna',
-        system: instructions,
-        prompt: input
-      })
-
-      if (!text?.trim()) throw new Error('AI_EMPTY_RESPONSE')
-      return NextResponse.json({ text: text.trim(), provider: 'vercel-ai-gateway' })
+      const gatewayModel = process.env.AI_GATEWAY_MODEL || 'openai/gpt-5.6-luna'
+      const result = await generateText({ model: gatewayModel, system: instructions, prompt: input })
+      if (!result.text?.trim()) throw new Error('AI_EMPTY_RESPONSE')
+      const inputTokens = Number((result.usage as any)?.inputTokens || 0)
+      const outputTokens = Number((result.usage as any)?.outputTokens || 0)
+      const usage = { inputTokens, outputTokens, estimatedCostUsd: calculateLunaCost(inputTokens, outputTokens) }
+      await recordUsage(mode, 'vercel-ai-gateway', gatewayModel, usage)
+      return NextResponse.json({ text: result.text.trim(), provider: 'vercel-ai-gateway', usage })
     } catch (error) {
       const message = safeMessage(error)
       failures.push({ provider: 'vercel-ai-gateway', message })
@@ -111,10 +148,7 @@ export async function POST(req: Request) {
 
     const accessBlocked = failures.some((failure) => looksLikeAccessFailure(failure.message))
     return NextResponse.json(
-      {
-        error: accessBlocked ? 'AI_PROVIDER_ACCESS_REQUIRED' : 'AI_REQUEST_FAILED',
-        providersTried: failures.map(({ provider }) => provider)
-      },
+      { error: accessBlocked ? 'AI_PROVIDER_ACCESS_REQUIRED' : 'AI_REQUEST_FAILED', providersTried: failures.map(({ provider }) => provider) },
       { status: accessBlocked ? 503 : 502 }
     )
   } catch (error) {
