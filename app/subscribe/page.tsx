@@ -11,6 +11,15 @@ const TOKEN_PACKS=[
   {tokens:'4,000',price:'$19.99'},
   {tokens:'10,000',price:'$39.99'},
 ]
+const AI_COSTS=[
+  ['Quick AI help / rewrite','5'],
+  ['Receipt analysis','10'],
+  ['Change order','15'],
+  ['Contract','20'],
+  ['AI estimate','20'],
+  ['Full build plan + materials/costs','30'],
+  ['Blueprint / project-planning assistance','30'],
+]
 
 export default function SubscribePage(){
   const [sent,setSent]=useState(false)
@@ -27,11 +36,16 @@ export default function SubscribePage(){
         <p style={{margin:'12px 0 0',color:'#526070',lineHeight:1.55}}>No free trial. Subscription payment is required to activate BuildFlow. Included tokens replenish with each paid billing month.</p>
       </div>
 
-      <h2 style={{fontSize:20,margin:'24px 0 10px'}}>Need more AI tokens?</h2>
+      <h2 style={{fontSize:20,margin:'24px 0 10px'}}>AI token costs</h2>
+      <div style={{border:'1px solid #dfe5ed',borderRadius:14,overflow:'hidden'}}>
+        {AI_COSTS.map(([feature,cost],i)=><div key={feature} style={{display:'flex',justifyContent:'space-between',gap:16,padding:'11px 14px',borderTop:i?'1px solid #edf0f4':'none'}}><span>{feature}</span><strong>{cost} tokens</strong></div>)}
+      </div>
+
+      <h2 style={{fontSize:20,margin:'24px 0 10px'}}>Buy more tokens</h2>
       <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:10}}>
         {TOKEN_PACKS.map(pack=><div key={pack.tokens} style={{border:'1px solid #dfe5ed',borderRadius:14,padding:14}}><strong>{pack.tokens} tokens</strong><div style={{fontSize:20,fontWeight:800,marginTop:5}}>{pack.price}</div></div>)}
       </div>
-      <p style={{fontSize:13,color:'#667386',lineHeight:1.5}}>Tokens are used for AI-powered features. Purchased token packs remain available until used.</p>
+      <p style={{fontSize:13,color:'#667386',lineHeight:1.5}}>Tokens are used only for AI-powered features. Purchased token packs remain available until used.</p>
 
       <p style={{margin:'22px 0 14px',color:'#526070',lineHeight:1.55}}>During the MVP launch, subscription and token-pack payments are handled through the Stevensapps Venmo Business profile and manually verified.</p>
       {!sent ? <>
