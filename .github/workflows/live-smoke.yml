@@ -15,18 +15,38 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Install Playwright
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install chromium
-      - name: Wait for production deployment
-        run: sleep 20
+      - name: Wait for this commit to reach production
+        env:
+          BASE_URL: https://build-flowhq2.vercel.app
+        run: |
+          set -e
+          echo "Waiting for production deployment of $GITHUB_SHA"
+          for attempt in $(seq 1 30); do
+            body=$(curl -fsSL "$BASE_URL" || true)
+            if [ -n "$body" ]; then
+              status=$(curl -sS -o /tmp/ai-body -w "%{http_code}" -X POST "$BASE_URL/api/ai" \
+                -H 'content-type: application/json' \
+                --data '{"mode":"estimate","input":"Project: Deployment check\nJob description: Replace 8 feet of baseboard and paint to match."}' || true)
+              echo "Attempt $attempt: /api/ai -> $status"
+              if [ "$status" = "200" ]; then
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "Production never exposed the expected POST /api/ai route."
+          cat /tmp/ai-body 2>/dev/null || true
+          exit 1
       - name: Run production browser smoke test
         env:
           BASE_URL: https://build-flowhq2.vercel.app
