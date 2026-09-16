@@ -1,5 +1,6 @@
 import './globals.css'
 import BuildPlansShortcut from './components/BuildPlansShortcut'
+import JobShortcut from './components/JobShortcut'
 
 export const metadata = {
   title: 'BuildFlow HQ',
@@ -18,5 +19,5 @@ export const metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="en"><body>{children}<BuildPlansShortcut/></body></html>
+  return <html lang="en"><body>{children}<JobShortcut/><BuildPlansShortcut/></body></html>
 }
