@@ -2,21 +2,38 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { CheckCircle2, ExternalLink, HardHat, ShieldCheck } from 'lucide-react'
+import { CheckCircle2, Coins, ExternalLink, HardHat, ShieldCheck } from 'lucide-react'
 
 const VENMO_PAYMENT_URL='https://venmo.com/code?user_id=4684033359349495058&created=1789509238.174633&printed=1'
+const TOKEN_PACKS=[
+  {tokens:'500',price:'$4.99'},
+  {tokens:'1,500',price:'$9.99'},
+  {tokens:'4,000',price:'$19.99'},
+  {tokens:'10,000',price:'$39.99'},
+]
 
 export default function SubscribePage(){
   const [sent,setSent]=useState(false)
   return <main style={{minHeight:'100vh',background:'#f5f7fb',padding:'32px 18px',fontFamily:'system-ui',color:'#172033'}}>
-    <section style={{maxWidth:620,margin:'0 auto',background:'#fff',border:'1px solid #e4e8ef',borderRadius:22,padding:28,boxShadow:'0 12px 35px rgba(20,35,60,.08)'}}>
+    <section style={{maxWidth:680,margin:'0 auto',background:'#fff',border:'1px solid #e4e8ef',borderRadius:22,padding:28,boxShadow:'0 12px 35px rgba(20,35,60,.08)'}}>
       <div style={{display:'flex',alignItems:'center',gap:10,fontWeight:800,fontSize:22}}><HardHat/>BuildFlow HQ</div>
       <h1 style={{fontSize:32,margin:'24px 0 8px'}}>Activate your company workspace</h1>
-      <p style={{lineHeight:1.6,color:'#526070'}}>BuildFlow keeps your projects, estimates, invoices, customers and company records organized in one private workspace.</p>
-      <div style={{margin:'24px 0',padding:20,border:'1px solid #dfe5ed',borderRadius:16}}>
-        <div style={{fontWeight:800,fontSize:20}}>BuildFlow subscription</div>
-        <p style={{margin:'8px 0 0',color:'#526070'}}>Pay securely through the Stevensapps Venmo Business profile. Subscription activation is manually verified during the MVP launch.</p>
+      <p style={{lineHeight:1.6,color:'#526070'}}>BuildFlow keeps your projects, AI estimates, build plans, invoices, customers and company records organized in one private workspace.</p>
+
+      <div style={{margin:'24px 0',padding:22,border:'2px solid #172033',borderRadius:18}}>
+        <div style={{fontWeight:800,fontSize:21}}>BuildFlow subscription</div>
+        <div style={{display:'flex',alignItems:'baseline',gap:6,marginTop:8}}><strong style={{fontSize:36}}>$29.99</strong><span style={{color:'#526070'}}>/ month</span></div>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginTop:10,fontWeight:700}}><Coins size={18}/>1,000 BuildFlow Tokens included each month</div>
+        <p style={{margin:'12px 0 0',color:'#526070',lineHeight:1.55}}>No free trial. Subscription payment is required to activate BuildFlow. Included tokens replenish with each paid billing month.</p>
       </div>
+
+      <h2 style={{fontSize:20,margin:'24px 0 10px'}}>Need more AI tokens?</h2>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:10}}>
+        {TOKEN_PACKS.map(pack=><div key={pack.tokens} style={{border:'1px solid #dfe5ed',borderRadius:14,padding:14}}><strong>{pack.tokens} tokens</strong><div style={{fontSize:20,fontWeight:800,marginTop:5}}>{pack.price}</div></div>)}
+      </div>
+      <p style={{fontSize:13,color:'#667386',lineHeight:1.5}}>Tokens are used for AI-powered features. Purchased token packs remain available until used.</p>
+
+      <p style={{margin:'22px 0 14px',color:'#526070',lineHeight:1.55}}>During the MVP launch, subscription and token-pack payments are handled through the Stevensapps Venmo Business profile and manually verified.</p>
       {!sent ? <>
         <a href={VENMO_PAYMENT_URL} target="_blank" rel="noopener noreferrer" style={{display:'flex',justifyContent:'center',alignItems:'center',gap:8,textDecoration:'none',background:'#172033',color:'#fff',padding:'14px 18px',borderRadius:12,fontWeight:800}}>Pay with Venmo <ExternalLink size={18}/></a>
         <button onClick={()=>setSent(true)} style={{width:'100%',marginTop:12,padding:'13px 18px',borderRadius:12,border:'1px solid #cfd6df',background:'#fff',fontWeight:700,cursor:'pointer'}}>I sent my payment</button>
