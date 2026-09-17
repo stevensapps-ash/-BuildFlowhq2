@@ -25,7 +25,7 @@ export default function WelcomePage(){
         <span className={styles.eyebrow}>BUILT FOR CONTRACTORS & SMALL BUSINESS OWNERS</span>
         <h1>Run the whole business from <em>one place.</em></h1>
         <p>Construction HQ brings estimates, projects, invoices, receipts, schedules, crews, documents and AI-powered business tools into one simple workspace.</p>
-        <div className={styles.actions}><Link className={styles.primary} href="/login">Start Free</Link><a className={styles.secondary} href="#features">See Features</a></div>
+        <div className={styles.actions}><Link className={styles.primary} href="/login">Get Started</Link><a className={styles.secondary} href="#features">See Features</a></div>
         <div className={styles.trust}><span><CheckCircle2/>Multi-tenant workspaces</span><span><CheckCircle2/>Cloud saved</span><span><CheckCircle2/>Works on phone & desktop</span></div>
       </div>
       <div className={styles.mockup}>
