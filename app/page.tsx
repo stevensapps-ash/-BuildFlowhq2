@@ -4,7 +4,7 @@ import {useEffect,useState} from 'react'
 import {
   AlertCircle, CalendarDays, Camera, ChevronDown, ClipboardList, Coins, DollarSign,
   FileSignature, FileText, FolderKanban, HardHat, Home, LogIn, LogOut, Menu,
-  NotebookPen, Plus, PlusCircle, Receipt, Settings, Sparkles, Trash2, Users,
+  NotebookPen, Plus, PlusCircle, Receipt, Settings, Sparkles, Trash2, Users, ContactRound, Phone, Mail,
   WalletCards, X, Clock3
 } from 'lucide-react'
 import ContractWorkspace from './components/ContractWorkspace'
@@ -17,19 +17,19 @@ type Project={id:number;customer:string;name:string;status:string;date:string;am
 type AppData={projects:any[];customers:any[];invoices:any[];notes:any[];estimates:any[];docs:any[];receipts:any[];schedule:any[];employees:any[];payroll:any[];files:any[];timeEntries:any[];settings:any;[key:string]:any}
 
 const emptyData:AppData={
-  projects:[],customers:[],invoices:[],notes:[],estimates:[],docs:[],receipts:[],
+  projects:[],customers:[],contacts:[],invoices:[],notes:[],estimates:[],docs:[],receipts:[],
   schedule:[],employees:[],payroll:[],files:[],timeEntries:[],
   settings:{businessName:'',phone:'',email:'',address:'',estimateTerms:'Estimates are subject to field verification and final owner approval.'}
 }
 const groups=[
-  {label:'Work',items:[['Dashboard',Home],['Projects',FolderKanban],['Schedule',CalendarDays],['Customers',Users]]},
+  {label:'Work',items:[['Dashboard',Home],['Projects',FolderKanban],['Schedule',CalendarDays],['Customers',Users],['Contact Book',ContactRound]]},
   {label:'Create',items:[['AI Estimates',Sparkles],['Contracts',FileSignature],['Change Orders',ClipboardList],['Blueprint Library',FileText]]},
   {label:'Money',items:[['Invoices',Receipt],['Receipts',WalletCards],['Payroll',DollarSign],['Billing & Tokens',Coins]]},
   {label:'Business',items:[['Before & After',Camera],['Employees',HardHat],['Documents',FileText],['Notes',NotebookPen],['Settings',Settings]]}
 ] as any[]
 const money=(n:number)=>'$'+Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2})
 const localDate=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
-function norm(d:any):AppData{return{...emptyData,...d,projects:d?.projects||[],customers:d?.customers||[],invoices:d?.invoices||[],notes:d?.notes||[],estimates:d?.estimates||[],docs:d?.docs||[],receipts:d?.receipts||[],schedule:d?.schedule||[],employees:d?.employees||[],payroll:d?.payroll||[],files:d?.files||[],timeEntries:d?.timeEntries||[],settings:{...emptyData.settings,...(d?.settings||{})}}}
+function norm(d:any):AppData{return{...emptyData,...d,projects:d?.projects||[],customers:d?.customers||[],contacts:d?.contacts||[],invoices:d?.invoices||[],notes:d?.notes||[],estimates:d?.estimates||[],docs:d?.docs||[],receipts:d?.receipts||[],schedule:d?.schedule||[],employees:d?.employees||[],payroll:d?.payroll||[],files:d?.files||[],timeEntries:d?.timeEntries||[],settings:{...emptyData.settings,...(d?.settings||{})}}}
 async function ai(mode:string,input:string){const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode,input})});const b=await r.json().catch(()=>({}));if(!r.ok)throw Error('AI draft could not be generated.');return String(b.text||'')}
 
 export default function Page(){
@@ -46,7 +46,7 @@ export default function Page(){
 
   if(!loaded)return <div className="loading"><HardHat/><b>Loading workspace…</b></div>
   const go=(s:string)=>{if(s==='Billing & Tokens'){location.href='/subscribe';return}setSection(s);setActiveJob(null);setToolsOpen(false);setCreateOpen(false)}
-  const createItems=[['Project','Projects'],['AI Estimate','AI Estimates'],['Invoice','Invoices'],['Receipt','Receipts'],['Contract','Contracts'],['Change Order','Change Orders'],['Customer','Customers']] as const
+  const createItems=[['Project','Projects'],['AI Estimate','AI Estimates'],['Invoice','Invoices'],['Receipt','Receipts'],['Contract','Contracts'],['Change Order','Change Orders'],['Customer','Customers'],['Contact','Contact Book']] as const
 
   return <div className="compactShell">
     <header className="topbar">
@@ -78,6 +78,7 @@ export default function Page(){
       section==='Schedule'?<Schedule data={data} setData={setData}/>:
       section==='Dashboard'?<Dashboard data={data} go={go}/>:
       section==='Customers'?<Customers data={data} setData={setData}/>:
+      section==='Contact Book'?<ContactBook data={data} setData={setData}/>:
       section==='Invoices'?<Invoices data={data} setData={setData}/>:
       section==='Change Orders'?<ChangeOrders data={data} setData={setData}/>:
       section==='Employees'?<Employees data={data} setData={setData}/>:
@@ -151,6 +152,24 @@ function Customers({data,setData}:{data:AppData;setData:(d:any)=>void}){
   function add(){if(!name.trim())return;setData({...data,customers:[{id:Date.now(),name:name.trim(),customer:name.trim(),phone:phone.trim(),email:email.trim(),address:address.trim(),status:'Active'},...data.customers]});setName('');setPhone('');setEmail('');setAddress('')}
   return <div className="workspace"><Head title="Customers" text="Enter a customer once, then reuse them across estimates, projects, contracts, and invoices."/><div className="builderGrid"><Field label="Customer name" value={name} set={setName}/><Field label="Phone" value={phone} set={setPhone}/><Field label="Email" value={email} set={setEmail}/><Field label="Address" value={address} set={setAddress}/><button className="primary" onClick={add}><Plus/>Add Customer</button></div>
   {data.customers.length?data.customers.map((x:any)=><div className="wideRow" key={x.id}><Users size={18}/><div className="grow"><b>{x.name||x.customer}</b><span>{[x.phone,x.email,x.address].filter(Boolean).join(' · ')||'Contact details not added yet'}</span></div><Status value={x.status||'Active'}/><button className="iconButton" title="Delete customer" onClick={()=>setData({...data,customers:data.customers.filter((y:any)=>y.id!==x.id)})}><Trash2 size={15}/></button></div>):<p>No customers yet.</p>}</div>
+}
+
+
+function ContactBook({data,setData}:{data:AppData;setData:(d:any)=>void}){
+  const[name,setName]=useState(''),[company,setCompany]=useState(''),[type,setType]=useState('Customer'),[phone,setPhone]=useState(''),[email,setEmail]=useState(''),[address,setAddress]=useState(''),[notes,setNotes]=useState(''),[search,setSearch]=useState('')
+  function add(){if(!name.trim())return;setData({...data,contacts:[{id:Date.now(),name:name.trim(),company:company.trim(),type,phone:phone.trim(),email:email.trim(),address:address.trim(),notes:notes.trim(),status:'Active'},...(data.contacts||[])]});setName('');setCompany('');setPhone('');setEmail('');setAddress('');setNotes('')}
+  const q=search.trim().toLowerCase(),rows=(data.contacts||[]).filter((x:any)=>!q||[x.name,x.company,x.type,x.phone,x.email,x.address,x.notes].some((v:any)=>String(v||'').toLowerCase().includes(q)))
+  return <div className="workspace"><Head title="Contact Book" text="Keep customers, subcontractors, suppliers, vendors, and other business contacts in one searchable place."/>
+    <div className="builderGrid">
+      <Field label="Name" value={name} set={setName}/><Field label="Company" value={company} set={setCompany}/>
+      <label>Contact type<select value={type} onChange={e=>setType(e.target.value)}><option>Customer</option><option>Subcontractor</option><option>Supplier</option><option>Vendor</option><option>Employee</option><option>Other</option></select></label>
+      <Field label="Phone" value={phone} set={setPhone}/><Field label="Email" value={email} set={setEmail}/><Field label="Address" value={address} set={setAddress}/>
+      <label style={{gridColumn:'1/-1'}}>Notes<textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Trade, specialty, account info, preferred contact time…"/></label>
+      <button className="primary" onClick={add}><Plus/>Add Contact</button>
+    </div>
+    <div className="libraryHead" style={{margin:'22px 0 10px'}}><div><b>Saved Contacts</b><div className="hint">{(data.contacts||[]).length} total</div></div><div className="librarySearch"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search contacts…"/></div></div>
+    {rows.length?rows.map((x:any)=><div className="wideRow" key={x.id}><ContactRound size={18}/><div className="grow"><b>{x.name}{x.company?' · '+x.company:''}</b><span>{[x.type,x.phone,x.email,x.address].filter(Boolean).join(' · ')}</span>{x.notes&&<span>{x.notes}</span>}</div>{x.phone&&<a className="iconButton" title="Call contact" href={'tel:'+x.phone}><Phone size={15}/></a>}{x.email&&<a className="iconButton" title="Email contact" href={'mailto:'+x.email}><Mail size={15}/></a>}<button className="iconButton" title="Delete contact" onClick={()=>setData({...data,contacts:(data.contacts||[]).filter((y:any)=>y.id!==x.id)})}><Trash2 size={15}/></button></div>):<p>{search?'No contacts match your search.':'No contacts yet.'}</p>}
+  </div>
 }
 
 function Invoices({data,setData}:{data:AppData;setData:(d:any)=>void}){
