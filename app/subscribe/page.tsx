@@ -33,7 +33,7 @@ export default function SubscribePage(){
         <div style={{fontWeight:800,fontSize:21}}>Construction HQ subscription</div>
         <div style={{display:'flex',alignItems:'baseline',gap:6,marginTop:8}}><strong style={{fontSize:36}}>$29.99</strong><span style={{color:'#526070'}}>/ month</span></div>
         <div style={{display:'flex',alignItems:'center',gap:8,marginTop:10,fontWeight:700}}><Coins size={18}/>1,000 Construction HQ Tokens included each month</div>
-        <p style={{margin:'12px 0 0',color:'#526070',lineHeight:1.55}}>No free trial. Subscription payment is required to activate BuildFlow. Included tokens replenish with each paid billing month.</p>
+        <p style={{margin:'12px 0 0',color:'#526070',lineHeight:1.55}}>No free trial. Subscription payment is required to activate Construction HQ. Included tokens replenish with each paid billing month.</p>
       </div>
 
       <h2 style={{fontSize:20,margin:'24px 0 10px'}}>AI token costs</h2>
