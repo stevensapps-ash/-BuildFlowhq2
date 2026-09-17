@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'BuildFlow HQ',
+    name: 'Construction HQ',
     short_name: 'BuildFlow',
     description: 'The operating system for contractors and construction companies.',
     start_url: '/',
