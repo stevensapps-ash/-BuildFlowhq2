@@ -3,14 +3,14 @@ import BuildPlansShortcut from './components/BuildPlansShortcut'
 import JobShortcut from './components/JobShortcut'
 
 export const metadata = {
-  title: 'BuildFlow HQ',
+  title: 'Construction HQ',
   description: 'The operating system for contractors and construction companies.',
   manifest: '/manifest.webmanifest',
   themeColor: '#f4a622',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'BuildFlow HQ'
+    title: 'Construction HQ'
   },
   icons: {
     icon: '/buildflow-icon.svg',
