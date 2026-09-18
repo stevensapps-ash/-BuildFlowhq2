@@ -85,7 +85,7 @@ export default function Page(){
       section==='Notes'?<Notes data={data} setData={setData}/>:
       section==='Settings'?<BusinessSettings data={data} setData={setData}/>:
       section==='Documents'?<Documents data={data}/>:
-      section==='AI Estimates'?<EstimateHub data={data}/>:
+      section==='AI Estimates'?<EstimateHub data={data} setData={setData}/>:
       <Simple section={section} data={data}/>}
       <footer>Construction HQ · Contractor business workspace</footer>
     </main>
@@ -117,6 +117,10 @@ function Dashboard({data,go}:{data:AppData,go:(s:string)=>void}){
     </Panel>
     <div className="fullPanel"><Panel title="Recent Estimates" eyebrow="RECENT" action="New estimate" onClick={()=>go('AI Estimates')}>
       {recent.length?recent.map((x:any)=><div className="dashRow" key={x.id}><Sparkles/><div><b>{x.project||x.customer||'Estimate'}</b><span>{x.status||'Draft'}</span></div>{x.amount!==undefined&&<strong>{money(x.amount)}</strong>}</div>):<EmptyAction icon={Sparkles} text="No estimates yet." action="Create your first AI estimate" onClick={()=>go('AI Estimates')}/>}
+    </Panel></div>
+    <div className="fullPanel"><Panel title="Business Activity" eyebrow="ACTIVITY" action="Open jobs" onClick={()=>go('Projects')}>
+      {[...data.projects.slice(0,2).map((x:any)=>({id:'p'+x.id,title:x.name,detail:'Job · '+(x.status||'Draft')})),...data.invoices.slice(0,2).map((x:any)=>({id:'i'+x.id,title:x.customer||x.project||'Invoice',detail:'Invoice · '+(x.status||'Draft')})),...data.docs.slice(0,2).map((x:any)=>({id:'d'+x.id,title:x.project||x.type||'Document',detail:(x.type||'Document')+' · '+(x.status||'Draft')}))].slice(0,5).map((x:any)=><div className="dashRow" key={x.id}><ClipboardList/><div><b>{x.title}</b><span>{x.detail}</span></div></div>)}
+      {!data.projects.length&&!data.invoices.length&&!data.docs.length&&<p>No activity yet. New estimates, jobs, invoices, and documents will appear here.</p>}
     </Panel></div>
   </section></>
 }
@@ -212,11 +216,12 @@ function Documents({data}:{data:AppData}){return <div className="workspace"><Hea
   {data.docs.length?data.docs.map((x:any)=><div className="wideRow" key={x.id}><FileText size={18}/><div className="grow"><b>{x.type||'Document'}{x.project?' · '+x.project:''}</b><span>{x.customer||''}</span></div><Status value={x.status||'Draft'}/></div>):<p>No documents yet.</p>}
 </div>}
 
-function EstimateHub({data}:{data:AppData}){
+function EstimateHub({data,setData}:{data:AppData;setData:(d:any)=>void}){
   const plans=data.docs.filter((x:any)=>x.type==='Build Plan')
-  const rows=[...data.estimates,...plans.map((x:any)=>({id:x.id,project:x.project,customer:x.customer,status:x.status||'Draft',amount:x.buildPlan?.estimatedTotalCost}))]
-  return <div className="workspace"><Head title="AI Estimates" text="Generate a detailed build plan with materials, labor, scope, assumptions, and estimated total."/><div className="reviewActions"><button className="primary" onClick={()=>location.href='/build-plans'}><Sparkles size={17}/>Generate AI Estimate</button></div>
-  {rows.length?rows.map((x:any)=><div className="wideRow" key={x.id}><Sparkles size={18}/><div className="grow"><b>{x.project||x.customer||'Estimate'}</b><span>{x.customer||''}</span></div><strong>{money(x.amount)}</strong><Status value={x.status||'Draft'}/></div>):<p>No estimates yet.</p>}</div>
+  const rows=[...data.estimates,...plans.map((x:any)=>({id:x.id,project:x.project,customer:x.customer,status:x.status||'Draft',amount:x.buildPlan?.estimatedTotalCost,buildPlan:true}))]
+  function patch(id:any,key:string,value:any){setData({...data,estimates:data.estimates.map((x:any)=>x.id===id?{...x,[key]:value}:x)})}
+  return <div className="workspace"><Head title="AI Estimates" text="Create, review, edit, approve, and move estimates directly into the job workflow."/><div className="reviewActions"><button className="primary" onClick={()=>location.href='/build-plans'}><Sparkles size={17}/>Generate AI Estimate</button></div>
+  {rows.length?rows.map((x:any)=><div className="wideRow" key={(x.buildPlan?'plan-':'estimate-')+x.id}><Sparkles size={18}/><div className="grow">{x.buildPlan?<><b>{x.project||x.customer||'Build Plan'}</b><span>{x.customer||''} · Edit materials, labor and scope from Build Plans</span></>:<><input aria-label="Estimate project" value={x.project||''} onChange={e=>patch(x.id,'project',e.target.value)} placeholder="Project"/><input aria-label="Estimate customer" value={x.customer||''} onChange={e=>patch(x.id,'customer',e.target.value)} placeholder="Customer"/></>}</div>{x.buildPlan?<strong>{money(x.amount)}</strong>:<input aria-label="Estimate amount" type="number" min="0" value={x.amount??0} onChange={e=>patch(x.id,'amount',Number(e.target.value||0))}/>} {x.buildPlan?<Status value={x.status||'Draft'}/>:<select aria-label="Estimate status" value={x.status||'Draft'} onChange={e=>patch(x.id,'status',e.target.value)}><option>Draft</option><option>Sent</option><option>Approved</option><option>Declined</option></select>}{x.buildPlan&&<button className="primary" onClick={()=>location.href='/build-plans'}>Edit</button>}</div>):<p>No estimates yet.</p>}</div>
 }
 
 function BusinessSettings({data,setData}:{data:AppData;setData:(d:any)=>void}){
