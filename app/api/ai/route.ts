@@ -8,7 +8,7 @@ const instructionsByMode: Record<string,string>={
  contract:`You are BuildFlow AI, a construction contract drafting assistant. Draft a concise contractor/customer agreement with scope, payment terms placeholders, change orders, site access, exclusions, schedule caveat, warranty placeholder, dispute/termination placeholders, and signature blocks.`,
  change_order:`You are BuildFlow AI, a construction change-order drafting assistant. Draft changed scope, reason, schedule impact, cost-impact structure, exclusions, approval language, and signature blocks.`,
  blueprint:`You are BuildFlow AI, a construction project-planning assistant. Create a conceptual project plan, not permit-ready architecture or engineering.`,
- receipt:`You are BuildFlow AI, a receipt organization assistant. Extract merchant, date, total, line items, expense categories, and suggested project tags.`,
+ receipt:`You are Construction HQ AI, a receipt organization assistant. Return ONLY valid JSON with key assignments, an array of objects containing index (number), customer (string), project (string), category (string). Use only customer and project names provided by the user. If uncertain, return empty strings rather than inventing a match.`,
  general:`You are BuildFlow AI, an operations assistant for contractors. Produce a practical draft the owner can review and edit.`
 }
 type Usage={inputTokens:number;outputTokens:number;estimatedCostUsd:number}
