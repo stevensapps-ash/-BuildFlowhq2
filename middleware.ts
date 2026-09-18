@@ -27,6 +27,7 @@ export async function middleware(request: NextRequest) {
   const isResetRoute = path.startsWith('/reset-password')
   const isLandingRoute = path.startsWith('/welcome')
   const isSubscribeRoute = path.startsWith('/subscribe')
+  const isSubscriptionApi = path.startsWith('/api/subscription/')
   const isPublicRoute = isAuthRoute || isResetRoute || isLandingRoute || path.startsWith('/api/health') || path === '/manifest.webmanifest' || path === '/sw.js' || path === '/buildflow-icon.svg'
 
   if (!user && !isPublicRoute) {
@@ -49,7 +50,7 @@ export async function middleware(request: NextRequest) {
       hasAccess = subscription?.status === 'active'
     }
 
-    if (!hasAccess && !isSubscribeRoute && !isAuthRoute && !isResetRoute && !isLandingRoute) {
+    if (!hasAccess && !isSubscribeRoute && !isSubscriptionApi && !isAuthRoute && !isResetRoute && !isLandingRoute) {
       if (isApiRoute) return NextResponse.json({ error: 'SUBSCRIPTION_REQUIRED' }, { status: 402 })
       const url = request.nextUrl.clone()
       url.pathname = '/subscribe'
