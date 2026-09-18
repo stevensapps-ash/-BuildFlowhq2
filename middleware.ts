@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const OWNER_EMAIL = 'stevensapps@icloud.com'
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
   const supabase = createServerClient(
@@ -24,23 +26,49 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = path.startsWith('/login')
   const isResetRoute = path.startsWith('/reset-password')
   const isLandingRoute = path.startsWith('/welcome')
+  const isSubscribeRoute = path.startsWith('/subscribe')
   const isPublicRoute = isAuthRoute || isResetRoute || isLandingRoute || path.startsWith('/api/health') || path === '/manifest.webmanifest' || path === '/sw.js' || path === '/buildflow-icon.svg'
 
   if (!user && !isPublicRoute) {
-    // Never redirect API POST requests to an HTML page. A redirected POST can become
-    // a misleading 405 response and makes API failures difficult to diagnose.
-    if (isApiRoute) {
-      return NextResponse.json({ error: 'AUTH_REQUIRED' }, { status: 401 })
-    }
+    if (isApiRoute) return NextResponse.json({ error: 'AUTH_REQUIRED' }, { status: 401 })
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
-  if (user && isAuthRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/'
-    return NextResponse.redirect(url)
+
+  if (user) {
+    const isOwner = user.email?.toLowerCase() === OWNER_EMAIL
+    let hasAccess = isOwner
+
+    if (!hasAccess) {
+      const { data: subscription } = await supabase
+        .from('user_subscriptions')
+        .select('status')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      hasAccess = subscription?.status === 'active'
+    }
+
+    if (!hasAccess && !isSubscribeRoute && !isAuthRoute && !isResetRoute && !isLandingRoute) {
+      if (isApiRoute) return NextResponse.json({ error: 'SUBSCRIPTION_REQUIRED' }, { status: 402 })
+      const url = request.nextUrl.clone()
+      url.pathname = '/subscribe'
+      return NextResponse.redirect(url)
+    }
+
+    if (hasAccess && isSubscribeRoute) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
+
+    if (isAuthRoute) {
+      const url = request.nextUrl.clone()
+      url.pathname = hasAccess ? '/' : '/subscribe'
+      return NextResponse.redirect(url)
+    }
   }
+
   return response
 }
 
