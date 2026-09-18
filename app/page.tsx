@@ -37,21 +37,30 @@ export default function Page(){
   const[data,setData]=useState<AppData>(emptyData)
   const[loaded,setLoaded]=useState(false)
   const[company,setCompany]=useState('Construction Company')
+  const[role,setRole]=useState('owner')
+  const[search,setSearch]=useState('')
   const[activeJob,setActiveJob]=useState<Project|null>(null)
   const[toolsOpen,setToolsOpen]=useState(false)
   const[createOpen,setCreateOpen]=useState(false)
 
-  useEffect(()=>{fetch('/api/workspace',{cache:'no-store'}).then(async r=>{if(r.status===401){location.href='/login';return}const w=await r.json();setCompany(w.companyName||'Construction Company');setData(norm(w.data||{}));setLoaded(true)})},[])
+  useEffect(()=>{fetch('/api/workspace',{cache:'no-store'}).then(async r=>{if(r.status===401){location.href='/login';return}const w=await r.json();setCompany(w.companyName||'Construction Company');setRole(w.role||'owner');setData(norm(w.data||{}));setLoaded(true)})},[])
   useEffect(()=>{if(!loaded)return;const t=setTimeout(()=>fetch('/api/workspace',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),450);return()=>clearTimeout(t)},[data,loaded])
 
   if(!loaded)return <div className="loading"><HardHat/><b>Loading workspace…</b></div>
-  const go=(s:string)=>{if(s==='Billing & Tokens'){location.href='/subscribe';return}setSection(s);setActiveJob(null);setToolsOpen(false);setCreateOpen(false)}
+  const go=(s:string)=>{if(s==='Billing & Tokens'){location.href='/subscribe';return}setSection(s);setActiveJob(null);setToolsOpen(false);setCreateOpen(false);setSearch('')}
+  const searchRows=search.trim()?[
+    ...data.customers.map((x:any)=>({kind:'Customer',title:x.name||x.customer,detail:x.phone||x.email||x.address||'',target:'Customers'})),
+    ...data.projects.map((x:any)=>({kind:'Job',title:x.name,detail:x.customer||'',target:'Projects'})),
+    ...data.invoices.map((x:any)=>({kind:'Invoice',title:x.customer||x.project||'Invoice',detail:money(x.amount),target:'Invoices'})),
+    ...data.docs.map((x:any)=>({kind:x.type||'Document',title:x.project||x.customer||x.type||'Document',detail:x.customer||'',target:'Documents'})),
+    ...data.receipts.map((x:any)=>({kind:'Receipt',title:x.merchant||x.description||'Receipt',detail:[x.customer,x.project].filter(Boolean).join(' · '),target:'Receipts'}))
+  ].filter((x:any)=>[x.kind,x.title,x.detail].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,8):[]
   const createItems=[['Project','Projects'],['AI Estimate','AI Estimates'],['Invoice','Invoices'],['Receipt','Receipts'],['Contract','Contracts'],['Change Order','Change Orders'],['Customer','Customers'],['Contact','Contact Book']] as const
 
   return <div className="compactShell">
     <header className="topbar">
       <div className="topBrand"><span className="topMark"><HardHat size={19}/></span><div><b>Construction HQ</b><small>{data.settings.businessName||company}</small></div></div>
-      <nav className="quickNav">
+      <div style={{position:'relative',flex:'1 1 260px',maxWidth:360}}><input aria-label="Search Construction HQ" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search customers, jobs, invoices, receipts…" style={{width:'100%',boxSizing:'border-box',padding:'10px 12px',borderRadius:10,border:'1px solid #2c3941',background:'#0b0e11',color:'inherit'}}/>{search&&<div style={{position:'absolute',zIndex:30,top:'110%',left:0,right:0,background:'#101418',border:'1px solid #2c3941',borderRadius:12,padding:8,boxShadow:'0 14px 35px rgba(0,0,0,.35)'}}>{searchRows.length?searchRows.map((x:any,i:number)=><button key={i} onClick={()=>go(x.target)} style={{display:'block',width:'100%',textAlign:'left',padding:10,border:0,borderBottom:'1px solid #243038',background:'transparent',color:'inherit',cursor:'pointer'}}><b>{x.kind}: {x.title}</b><small style={{display:'block',opacity:.7}}>{x.detail}</small></button>):<div style={{padding:10}}>No matches</div>}</div>}</div><nav className="quickNav">
         <button className={section==='Dashboard'?'active':''} onClick={()=>go('Dashboard')}><Home/>Home</button>
         <button className={section==='Projects'?'active':''} onClick={()=>go('Projects')}><FolderKanban/>Jobs</button>
         <button className={section==='AI Estimates'?'active':''} onClick={()=>go('AI Estimates')}><Sparkles/>Estimate</button>
@@ -60,7 +69,7 @@ export default function Page(){
       </nav>
       {toolsOpen&&<div className="toolMenu">
         <div className="toolMenuHead"><b>Construction HQ Tools</b><button onClick={()=>setToolsOpen(false)}><X/></button></div>
-        {groups.map(g=><div className="toolGroup" key={g.label}><small>{g.label}</small><div>{g.items.map(([n,I]:any)=><button key={n} onClick={()=>go(n)} className={section===n?'active':''}><I size={17}/><span>{n}</span></button>)}</div></div>)}
+        {groups.filter(g=>role!=='employee'||!['Money'].includes(g.label)).map(g=><div className="toolGroup" key={g.label}><small>{g.label}</small><div>{g.items.map(([n,I]:any)=><button key={n} onClick={()=>go(n)} className={section===n?'active':''}><I size={17}/><span>{n}</span></button>)}</div></div>)}
         <div className="toolGroup"><small>Account</small><div><button onClick={()=>location.href='/login'}><LogIn size={17}/>Sign in</button><button onClick={()=>location.href='/logout'}><LogOut size={17}/>Sign out</button></div></div>
       </div>}
     </header>
@@ -68,7 +77,7 @@ export default function Page(){
     {createOpen&&<div className="createMenu"><div className="createMenuHead"><b>Create New</b><button onClick={()=>setCreateOpen(false)}><X size={18}/></button></div>{createItems.map(([label,target])=><button key={label} onClick={()=>go(target)}><Plus size={17}/>{label}</button>)}</div>}
 
     <main className="compactMain">
-      <div className="pageTitle"><h1>{section}</h1><p>{data.settings.businessName||company}</p></div>
+      <div className="pageTitle"><h1>{section}</h1><p>{data.settings.businessName||company} · {role==='employee'?'Employee workspace':role==='manager'?'Manager workspace':'Owner workspace'}</p></div>{role==='employee'&&<div className="dashPanel" style={{marginBottom:14}}><b>Employee access</b><p style={{marginBottom:0}}>Company-wide financial and billing controls are hidden. Your workspace focuses on assigned jobs, schedule, project details, photos, notes, materials and time activity.</p></div>}
       {activeJob?<JobTracker project={data.projects.find((p:any)=>p.id===activeJob.id)||activeJob} data={data} setData={setData} onClose={()=>setActiveJob(null)}/>:
       section==='Contracts'?<ContractWorkspace data={data} setData={setData} ai={ai}/>:
       section==='Blueprint Library'?<BlueprintLibrary data={data} setData={setData} ai={ai}/>:
@@ -76,7 +85,7 @@ export default function Page(){
       section==='Receipts'?<ReceiptOrganizer data={data} setData={setData}/>:
       section==='Projects'?<Projects data={data} setData={setData} startJob={setActiveJob}/>:
       section==='Schedule'?<Schedule data={data} setData={setData}/>:
-      section==='Dashboard'?<Dashboard data={data} go={go}/>:
+      section==='Dashboard'?<Dashboard data={data} go={go} role={role}/>:
       section==='Customers'?<Customers data={data} setData={setData}/>:
       section==='Contact Book'?<ContactBook data={data} setData={setData}/>:
       section==='Invoices'?<Invoices data={data} setData={setData}/>:
@@ -100,14 +109,16 @@ export default function Page(){
   </div>
 }
 
-function Dashboard({data,go}:{data:AppData,go:(s:string)=>void}){
+function Dashboard({data,go,role}:{data:AppData,go:(s:string)=>void,role:string}){
   const today=localDate(),todayJobs=data.schedule.filter((x:any)=>x.date===today),unpaid=data.invoices.filter((x:any)=>String(x.status||'').toLowerCase()!=='paid'),unpaidTotal=unpaid.reduce((a:number,x:any)=>a+Number(x.balance??x.amount??0),0),recent=[...data.estimates].slice(0,4)
+  const attention=[...unpaid.filter((x:any)=>String(x.status||'').toLowerCase()==='overdue').map((x:any)=>({text:`Overdue invoice · ${x.customer||x.project||'Customer'}`,target:'Invoices'})),...data.estimates.filter((x:any)=>String(x.status||'').toLowerCase()==='sent').map((x:any)=>({text:`Estimate awaiting approval · ${x.project||x.customer||'Estimate'}`,target:'AI Estimates'})),...data.docs.filter((x:any)=>String(x.status||'').toLowerCase().includes('awaiting')).map((x:any)=>({text:`${x.type||'Document'} awaiting action · ${x.project||x.customer||''}`,target:'Documents'}))].slice(0,6)
   return <><section className="hero"><div><span>CONSTRUCTION HQ</span><h2>Your business, organized for today.</h2><p>See what needs attention and jump straight into the next job, estimate, or invoice.</p></div><button onClick={()=>go('AI Estimates')}><Plus size={17}/> New Estimate</button></section>
   <section className="stats">
     <button className="statButton" onClick={()=>go('Projects')}><Stat label="Active Jobs" value={String(data.projects.filter((p:any)=>p.status==='In Progress').length)} sub="currently active"/></button>
     <button className="statButton" onClick={()=>go('Schedule')}><Stat label="Today's Jobs" value={String(todayJobs.length)} sub="scheduled today"/></button>
-    <button className="statButton" onClick={()=>go('Invoices')}><Stat label="Unpaid" value={money(unpaidTotal)} sub={unpaid.length+" open invoices"}/></button>
+    {role!=='employee'&&<button className="statButton" onClick={()=>go('Invoices')}><Stat label="Unpaid" value={money(unpaidTotal)} sub={unpaid.length+" open invoices"}/></button>}
   </section>
+  {attention.length>0&&<section className="dashPanel" style={{marginBottom:18}}><div className="dashPanelHead"><div><small>ATTENTION</small><h3>Needs Attention</h3></div></div>{attention.map((x:any,i:number)=><button key={i} onClick={()=>go(x.target)} className="wideRow" style={{width:'100%',textAlign:'left',cursor:'pointer'}}><AlertCircle size={18}/><div className="grow"><b>{x.text}</b></div></button>)}</section>}
   <section className="dashboardGrid">
     <Panel title="Today's Jobs" eyebrow="TODAY" action="View schedule" onClick={()=>go('Schedule')}>
       {todayJobs.length?todayJobs.slice(0,4).map((x:any)=><div className="dashRow" key={x.id}><Clock3/><div><b>{x.project}</b><span>{x.start}–{x.end} · {x.worker}</span></div></div>):<EmptyAction icon={CalendarDays} text="Nothing scheduled for today." action="Add to schedule" onClick={()=>go('Schedule')}/>}
@@ -152,10 +163,34 @@ function Projects({data,setData,startJob}:{data:AppData;setData:(d:any)=>void;st
 }
 
 function Customers({data,setData}:{data:AppData;setData:(d:any)=>void}){
-  const[name,setName]=useState(''),[phone,setPhone]=useState(''),[email,setEmail]=useState(''),[address,setAddress]=useState('')
+  const[name,setName]=useState(''),[phone,setPhone]=useState(''),[email,setEmail]=useState(''),[address,setAddress]=useState(''),[openId,setOpenId]=useState<number|null>(null)
   function add(){if(!name.trim())return;setData({...data,customers:[{id:Date.now(),name:name.trim(),customer:name.trim(),phone:phone.trim(),email:email.trim(),address:address.trim(),status:'Active'},...data.customers]});setName('');setPhone('');setEmail('');setAddress('')}
-  return <div className="workspace"><Head title="Customers" text="Enter a customer once, then reuse them across estimates, projects, contracts, and invoices."/><div className="builderGrid"><Field label="Customer name" value={name} set={setName}/><Field label="Phone" value={phone} set={setPhone}/><Field label="Email" value={email} set={setEmail}/><Field label="Address" value={address} set={setAddress}/><button className="primary" onClick={add}><Plus/>Add Customer</button></div>
-  {data.customers.length?data.customers.map((x:any)=><div className="wideRow" key={x.id}><Users size={18}/><div className="grow"><b>{x.name||x.customer}</b><span>{[x.phone,x.email,x.address].filter(Boolean).join(' · ')||'Contact details not added yet'}</span></div><Status value={x.status||'Active'}/><button className="iconButton" title="Delete customer" onClick={()=>setData({...data,customers:data.customers.filter((y:any)=>y.id!==x.id)})}><Trash2 size={15}/></button></div>):<p>No customers yet.</p>}</div>
+  const selected=data.customers.find((x:any)=>x.id===openId)
+  return <div className="workspace"><Head title="Customers" text="Each customer has one job binder for projects, estimates, contracts, invoices, receipts, photos, notes and documents."/><div className="builderGrid"><Field label="Customer name" value={name} set={setName}/><Field label="Phone" value={phone} set={setPhone}/><Field label="Email" value={email} set={setEmail}/><Field label="Address" value={address} set={setAddress}/><button className="primary" onClick={add}><Plus/>Add Customer</button></div>
+  {selected&&<CustomerBinder customer={selected} data={data} onClose={()=>setOpenId(null)}/>}
+  {data.customers.length?data.customers.map((x:any)=><div className="wideRow" key={x.id}><Users size={18}/><div className="grow"><b>{x.name||x.customer}</b><span>{[x.phone,x.email,x.address].filter(Boolean).join(' · ')||'Contact details not added yet'}</span></div><Status value={x.status||'Active'}/><button className="primary" onClick={()=>setOpenId(x.id)}>Open File</button><button className="iconButton" title="Delete customer" onClick={()=>setData({...data,customers:data.customers.filter((y:any)=>y.id!==x.id)})}><Trash2 size={15}/></button></div>):<p>No customers yet.</p>}</div>
+}
+
+function CustomerBinder({customer,data,onClose}:{customer:any;data:AppData;onClose:()=>void}){
+  const n=String(customer.name||customer.customer||'').toLowerCase()
+  const projects=data.projects.filter((x:any)=>String(x.customer||'').toLowerCase()===n)
+  const estimates=data.estimates.filter((x:any)=>String(x.customer||'').toLowerCase()===n)
+  const invoices=data.invoices.filter((x:any)=>String(x.customer||'').toLowerCase()===n)
+  const receipts=data.receipts.filter((x:any)=>String(x.customer||'').toLowerCase()===n||projects.some((p:any)=>p.name===x.project))
+  const docs=data.docs.filter((x:any)=>String(x.customer||'').toLowerCase()===n||projects.some((p:any)=>p.name===x.project))
+  const totalReceipts=receipts.reduce((s:number,x:any)=>s+Number(x.amount||0),0)
+  const contractValue=projects.reduce((s:number,x:any)=>s+Number(x.amount||0),0)
+  const labor=data.payroll.filter((x:any)=>projects.some((p:any)=>p.name===x.project)).reduce((s:number,x:any)=>s+Number(x.gross||0),0)
+  const actualCost=totalReceipts+labor
+  const profit=contractValue-actualCost
+  const timeline=[...projects.map((x:any)=>({date:x.date||'',label:`Job · ${x.name} · ${x.status}`})),...estimates.map((x:any)=>({date:x.createdAt||'',label:`Estimate · ${x.project||'Project'} · ${x.status||'Draft'}`})),...invoices.map((x:any)=>({date:x.createdAt||x.due||'',label:`Invoice · ${x.status||'Draft'} · ${money(x.amount)}`})),...receipts.map((x:any)=>({date:x.date||'',label:`Receipt · ${x.merchant||'Vendor'} · ${money(x.amount)}`})),...docs.map((x:any)=>({date:x.createdAt||'',label:`${x.type||'Document'} · ${x.status||'Draft'}`}))].sort((a:any,b:any)=>String(b.date).localeCompare(String(a.date))).slice(0,12)
+  return <div className="dashPanel" style={{margin:'18px 0'}}><div className="dashPanelHead"><div><small>CUSTOMER JOB BINDER</small><h3>{customer.name||customer.customer}</h3><span>{[customer.phone,customer.email,customer.address].filter(Boolean).join(' · ')}</span></div><button onClick={onClose}>Close</button></div>
+    <div className="stats"><Stat label="Project Value" value={money(contractValue)} sub={projects.length+' projects'}/><Stat label="Actual Cost" value={money(actualCost)} sub="receipts + labor"/><Stat label="Job Profit" value={money(profit)} sub={contractValue?'before overhead/tax':'no project value yet'}/></div>
+    <h3>Projects</h3>{projects.length?projects.map((x:any)=><div className="wideRow" key={x.id}><FolderKanban size={17}/><div className="grow"><b>{x.name}</b><span>{x.status}</span></div><strong>{money(x.amount)}</strong></div>):<p>No projects yet.</p>}
+    <h3>Receipts & Highlighted Purchases</h3>{receipts.length?receipts.map((x:any)=><div className="wideRow" key={x.id} style={{borderLeft:`8px solid ${x.color||'#888'}`}}><Receipt size={17}/><div className="grow"><b>{x.merchant||x.description||'Receipt'}</b><span>{x.description||x.project||'Unassigned'} · {x.date||''}</span></div><strong>{money(x.amount)}</strong>{x.receiptImage&&String(x.receiptImage).startsWith('data:image')&&<img src={x.receiptImage} alt="Receipt" style={{width:54,height:54,objectFit:'cover',borderRadius:8}}/>}</div>):<p>No receipts assigned to this customer yet.</p>}
+    <h3>Documents</h3>{docs.length?docs.map((x:any)=><div className="wideRow" key={x.id}><FileText size={17}/><div className="grow"><b>{x.type||'Document'}</b><span>{x.project||''}</span></div><Status value={x.status||'Draft'}/></div>):<p>No documents yet.</p>}
+    <h3>Timeline</h3>{timeline.length?timeline.map((x:any,i:number)=><div className="wideRow" key={i}><Clock3 size={17}/><div className="grow"><b>{x.label}</b><span>{x.date||'Date not recorded'}</span></div></div>):<p>No activity recorded yet.</p>}
+  </div>
 }
 
 
