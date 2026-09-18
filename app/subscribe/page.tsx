@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { CheckCircle2, Coins, ExternalLink, HardHat, ShieldCheck } from 'lucide-react'
 
 const VENMO_PAYMENT_URL='https://venmo.com/code?user_id=4684033359349495058&created=1789509238.174633&printed=1'
-const TOKEN_PACKS=[
+const YEARLY_PRICE='$299.99'\nconst TOKEN_PACKS=[
   {tokens:'500',price:'$4.99'},
   {tokens:'1,500',price:'$9.99'},
   {tokens:'4,000',price:'$19.99'},
@@ -27,13 +27,13 @@ export default function SubscribePage(){
     <section style={{maxWidth:680,margin:'0 auto',background:'#fff',border:'1px solid #e4e8ef',borderRadius:22,padding:28,boxShadow:'0 12px 35px rgba(20,35,60,.08)'}}>
       <div style={{display:'flex',alignItems:'center',gap:10,fontWeight:800,fontSize:22}}><HardHat/>Construction HQ</div>
       <h1 style={{fontSize:32,margin:'24px 0 8px'}}>Activate your company workspace</h1>
-      <p style={{lineHeight:1.6,color:'#526070'}}>BuildFlow keeps your projects, AI estimates, build plans, invoices, customers and company records organized in one private workspace.</p>
+      <p style={{lineHeight:1.6,color:'#526070'}}>Construction HQ keeps your projects, AI estimates, build plans, invoices, customers and company records organized in one private workspace.</p>
 
       <div style={{margin:'24px 0',padding:22,border:'2px solid #172033',borderRadius:18}}>
         <div style={{fontWeight:800,fontSize:21}}>Construction HQ subscription</div>
         <div style={{display:'flex',alignItems:'baseline',gap:6,marginTop:8}}><strong style={{fontSize:36}}>$29.99</strong><span style={{color:'#526070'}}>/ month</span></div>
         <div style={{display:'flex',alignItems:'center',gap:8,marginTop:10,fontWeight:700}}><Coins size={18}/>1,000 Construction HQ Tokens included each month</div>
-        <p style={{margin:'12px 0 0',color:'#526070',lineHeight:1.55}}>No free trial. Subscription payment is required to activate Construction HQ. Included tokens replenish with each paid billing month.</p>
+        <p style={{margin:'12px 0 0',color:'#526070',lineHeight:1.55}}>No free trial. Subscription payment is required to activate Construction HQ. Included tokens replenish with each paid billing month.</p>\n        <div style={{marginTop:16,paddingTop:16,borderTop:'1px solid #dfe5ed'}}><div style={{fontWeight:800,fontSize:18}}>Yearly subscription</div><div style={{display:'flex',alignItems:'baseline',gap:6,marginTop:6}}><strong style={{fontSize:30}}>{YEARLY_PRICE}</strong><span style={{color:'#526070'}}>/ year</span></div><p style={{margin:'7px 0 0',color:'#526070',lineHeight:1.5}}>Save $59.89 compared with paying $29.99 monthly for 12 months — about 2 months free. Includes 1,000 Construction HQ Tokens each month.</p></div>
       </div>
 
       <h2 style={{fontSize:20,margin:'24px 0 10px'}}>AI token costs</h2>
@@ -52,7 +52,7 @@ export default function SubscribePage(){
         <a href={VENMO_PAYMENT_URL} target="_blank" rel="noopener noreferrer" style={{display:'flex',justifyContent:'center',alignItems:'center',gap:8,textDecoration:'none',background:'#172033',color:'#fff',padding:'14px 18px',borderRadius:12,fontWeight:800}}>Pay with Venmo <ExternalLink size={18}/></a>
         <button onClick={()=>setSent(true)} style={{width:'100%',marginTop:12,padding:'13px 18px',borderRadius:12,border:'1px solid #cfd6df',background:'#fff',fontWeight:700,cursor:'pointer'}}>I sent my payment</button>
       </> : <div style={{padding:20,borderRadius:16,background:'#f1f7f3'}}><div style={{display:'flex',gap:9,alignItems:'center',fontWeight:800}}><CheckCircle2 size={20}/>Payment pending verification</div><p style={{lineHeight:1.55,marginBottom:0}}>Your payment submission has been noted on this device. Construction HQ access will be activated after the payment is verified.</p></div>}
-      <div style={{display:'flex',gap:8,alignItems:'flex-start',marginTop:22,color:'#526070',fontSize:14,lineHeight:1.5}}><ShieldCheck size={18} style={{flex:'0 0 auto'}}/><span>BuildFlow does not ask you to enter bank or card details on this page. Venmo handles the payment.</span></div>
+      <div style={{display:'flex',gap:8,alignItems:'flex-start',marginTop:22,color:'#526070',fontSize:14,lineHeight:1.5}}><ShieldCheck size={18} style={{flex:'0 0 auto'}}/><span>Construction HQ does not ask you to enter bank or card details on this page. Venmo handles the payment.</span></div>
       <p style={{textAlign:'center',marginTop:22,fontSize:14}}><Link href="/login">Return to sign in</Link></p>
     </section>
   </main>
