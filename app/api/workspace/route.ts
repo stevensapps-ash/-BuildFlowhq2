@@ -1,6 +1,30 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+function employeeView(data: any) {
+  const d = data && typeof data === 'object' ? data : {}
+  return {
+    projects: (d.projects || []).map((p:any)=>({ ...p, amount: undefined })),
+    customers: (d.customers || []).map((x:any)=>({ id:x.id, name:x.name, customer:x.customer, phone:x.phone, address:x.address, status:x.status })),
+    contacts: (d.contacts || []).filter((x:any)=>x.type==='Employee' || x.type==='Subcontractor').map((x:any)=>({ id:x.id,name:x.name,company:x.company,type:x.type,phone:x.phone,address:x.address,notes:x.notes })),
+    schedule: d.schedule || [],
+    notes: d.notes || [],
+    files: d.files || [],
+    docs: (d.docs || []).filter((x:any)=>['Build Plan','Blueprint','Safety','Work Order'].includes(x.type)).map((x:any)=>({ ...x, approvedEstimate: undefined, amount: undefined })),
+    receipts: [],
+    invoices: [],
+    estimates: [],
+    payroll: [],
+    timeEntries: d.timeEntries || [],
+    employees: [],
+    settings: {
+      businessName: d.settings?.businessName || '',
+      phone: d.settings?.phone || '',
+      address: d.settings?.address || ''
+    }
+  }
+}
+
 async function getContext() {
   const supabase = createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -44,7 +68,7 @@ export async function GET() {
     companyId: membership.company_id,
     companyName: company?.name || 'BuildFlow Company',
     role: membership.role,
-    data: workspace?.data || {},
+    data: membership.role === 'employee' ? employeeView(workspace?.data || {}) : (workspace?.data || {}),
     updatedAt: workspace?.updated_at || null
   })
 }
