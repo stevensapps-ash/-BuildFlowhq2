@@ -5,7 +5,7 @@ import {
   AlertCircle, CalendarDays, Camera, ChevronDown, ClipboardList, Coins, DollarSign,
   FileSignature, FileText, FolderKanban, HardHat, Home, LogIn, LogOut, Menu,
   NotebookPen, Plus, PlusCircle, Receipt, Settings, Sparkles, Trash2, Users, ContactRound, Phone, Mail,
-  WalletCards, X, Clock3
+  WalletCards, X, Clock3, Search
 } from 'lucide-react'
 import ContractWorkspace from './components/ContractWorkspace'
 import JobTracker from './components/JobTracker'
@@ -60,7 +60,7 @@ export default function Page(){
   return <div className="compactShell">
     <header className="topbar">
       <div className="topBrand"><span className="topMark"><HardHat size={19}/></span><div><b>Construction HQ</b><small>{data.settings.businessName||company}</small></div></div>
-      <div style={{position:'relative',flex:'1 1 260px',maxWidth:360}}><input aria-label="Search Construction HQ" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search customers, jobs, invoices, receipts…" style={{width:'100%',boxSizing:'border-box',padding:'10px 12px',borderRadius:10,border:'1px solid #2c3941',background:'#0b0e11',color:'inherit'}}/>{search&&<div style={{position:'absolute',zIndex:30,top:'110%',left:0,right:0,background:'#101418',border:'1px solid #2c3941',borderRadius:12,padding:8,boxShadow:'0 14px 35px rgba(0,0,0,.35)'}}>{searchRows.length?searchRows.map((x:any,i:number)=><button key={i} onClick={()=>go(x.target)} style={{display:'block',width:'100%',textAlign:'left',padding:10,border:0,borderBottom:'1px solid #243038',background:'transparent',color:'inherit',cursor:'pointer'}}><b>{x.kind}: {x.title}</b><small style={{display:'block',opacity:.7}}>{x.detail}</small></button>):<div style={{padding:10}}>No matches</div>}</div>}</div><nav className="quickNav">
+      <div className="chqSearch"><div className="chqSearchBox"><Search className="chqSearchIcon" size={16}/><input className="chqSearchInput" aria-label="Search Construction HQ" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search Construction HQ…"/>{search&&<button className="chqSearchClear" aria-label="Clear search" onClick={()=>setSearch('')}><X size={15}/></button>}</div>{search&&<div className="chqSearchResults">{searchRows.length?searchRows.map((x:any,i:number)=><button className="chqSearchResult" key={i} onClick={()=>go(x.target)}><b>{x.kind}: {x.title}</b><small>{x.detail}</small></button>):<div className="chqSearchEmpty">No matches found</div>}</div>}</div><nav className="quickNav">
         <button className={section==='Dashboard'?'active':''} onClick={()=>go('Dashboard')}><Home/>Home</button>
         <button className={section==='Projects'?'active':''} onClick={()=>go('Projects')}><FolderKanban/>Jobs</button>
         <button className={section==='AI Estimates'?'active':''} onClick={()=>go('AI Estimates')}><Sparkles/>Estimate</button>
