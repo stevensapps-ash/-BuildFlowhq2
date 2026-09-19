@@ -31,7 +31,7 @@ export default function SubscribePage(){
     <section style={{maxWidth:680,margin:'0 auto',background:'#fff',border:'1px solid #e4e8ef',borderRadius:22,padding:28,boxShadow:'0 12px 35px rgba(20,35,60,.08)'}}>
       <div style={{display:'flex',alignItems:'center',gap:10,fontWeight:800,fontSize:22}}><HardHat/>Construction HQ</div>
       <h1 style={{fontSize:32,margin:'24px 0 8px'}}>Activate your company workspace</h1>
-      <p style={{lineHeight:1.6,color:'#526070'}>Construction HQ keeps your projects, AI estimates, build plans, invoices, customers and company records organized in one private workspace.</p>
+      <p style={{lineHeight:1.6,color:'#526070'}}>Construction HQ keeps your projects, AI estimates, build plans, invoices, customers and company records organized in one private workspace.</p>
 
       <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:10,margin:'20px 0'}}><button onClick={()=>setPlan('monthly')} style={{padding:14,borderRadius:12,border:plan==='monthly'?'2px solid #172033':'1px solid #dfe5ed',background:'#fff',fontWeight:800}}>Monthly · $29.99</button><button onClick={()=>setPlan('yearly')} style={{padding:14,borderRadius:12,border:plan==='yearly'?'2px solid #172033':'1px solid #dfe5ed',background:'#fff',fontWeight:800}}>Yearly · $299.99</button></div><div style={{margin:'24px 0',padding:22,border:'2px solid #172033',borderRadius:18}}>
         <div style={{fontWeight:800,fontSize:21}}>Construction HQ subscription</div>
