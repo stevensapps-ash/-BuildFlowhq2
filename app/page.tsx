@@ -5,7 +5,7 @@ import {
   AlertCircle, CalendarDays, Camera, ChevronDown, ClipboardList, Coins, DollarSign,
   FileSignature, FileText, FolderKanban, HardHat, Home, LogIn, LogOut, Menu,
   NotebookPen, Plus, PlusCircle, Receipt, Settings, Sparkles, Trash2, Users, ContactRound, Phone, Mail,
-  WalletCards, X, Clock3, Search
+  WalletCards, X, Clock3, Search, BriefcaseBusiness, FilePlus2, Upload, FolderOpen
 } from 'lucide-react'
 import ContractWorkspace from './components/ContractWorkspace'
 import JobTracker from './components/JobTracker'
@@ -119,8 +119,17 @@ function Dashboard({data,go,role}:{data:AppData,go:(s:string)=>void,role:string}
   <section className="stats">
     <button className="statButton" onClick={()=>go('Projects')}><Stat label="Active Jobs" value={String(data.projects.filter((p:any)=>p.status==='In Progress').length)} sub="currently active"/></button>
     <button className="statButton" onClick={()=>go('Schedule')}><Stat label="Today's Jobs" value={String(todayJobs.length)} sub="scheduled today"/></button>
-    {role!=='employee'&&<button className="statButton" onClick={()=>go('Invoices')}><Stat label="Unpaid" value={money(unpaidTotal)} sub={unpaid.length+" open invoices"}/></button>}
+    {role!=='employee'&&<button className="statButton" onClick={()=>go('Invoices')}><Stat label="Unpaid Invoices" value={String(unpaid.length)} sub={unpaid.length?money(unpaidTotal)+' outstanding':'nothing outstanding'}/></button>}
   </section>
+  <section className="quickActions"><div className="quickActionsHead"><h3>Quick Actions</h3><button onClick={()=>go('Documents')}>View all <span>›</span></button></div><div className="quickActionGrid">
+    <button onClick={()=>go('AI Estimates')}><FilePlus2/><b>New Estimate</b><small>AI powered</small></button>
+    <button onClick={()=>go('Plans Studio')}><BriefcaseBusiness/><b>Build Plans</b><small>Draw & design</small></button>
+    <button onClick={()=>go('Contracts')}><FileSignature/><b>New Contract</b><small>Templates</small></button>
+    <button onClick={()=>go('Schedule')}><CalendarDays/><b>Schedule</b><small>Manage jobs</small></button>
+    <button onClick={()=>go('Before & After')}><Upload/><b>Upload Photos</b><small>AI file sorting</small></button>
+    <button onClick={()=>go('Documents')}><FolderOpen/><b>File Cabinet</b><small>Customer files</small></button>
+  </div></section>
+  <section className="hqBanner"><div><Sparkles/><span><b>Hey HQ</b><small>Ask, find, create — by voice or text</small></span></div><button onClick={()=>document.querySelector<HTMLButtonElement>('.hqOrb')?.click()}>Start</button></section>
   {attention.length>0&&<section className="dashPanel" style={{marginBottom:18}}><div className="dashPanelHead"><div><small>ATTENTION</small><h3>Needs Attention</h3></div></div>{attention.map((x:any,i:number)=><button key={i} onClick={()=>go(x.target)} className="wideRow" style={{width:'100%',textAlign:'left',cursor:'pointer'}}><AlertCircle size={18}/><div className="grow"><b>{x.text}</b></div></button>)}</section>}
   <section className="dashboardGrid">
     <Panel title="Quick Start" eyebrow="WORKFLOW" action="Start project" onClick={()=>go('Projects')}><div className="dashRow"><FolderKanban/><div><b>Create one project record</b><span>Customer → Estimate → Plans → Contract → Schedule → Work → Invoice → Closeout</span></div></div><button className="primary" onClick={()=>go('Projects')}><Plus size={16}/> Start Project Setup</button></Panel><Panel title="Today's Jobs" eyebrow="TODAY" action="View schedule" onClick={()=>go('Schedule')}>
