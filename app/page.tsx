@@ -95,7 +95,7 @@ export default function Page(){
       section==='Employees'?<Employees data={data} setData={setData}/>:
       section==='Notes'?<Notes data={data} setData={setData}/>:
       section==='Settings'?<BusinessSettings data={data} setData={setData}/>:
-      section==='Documents'?<Documents data={data}/>:
+      section==='Documents'?<Documents data={data} setData={setData}/>:
       section==='AI Estimates'?<EstimateHub data={data} setData={setData}/>:
       <Simple section={section} data={data}/>}
       <footer>Construction HQ · Contractor business workspace</footer>
@@ -250,9 +250,17 @@ function Notes({data,setData}:{data:AppData;setData:(d:any)=>void}){
   {data.notes.length?data.notes.map((x:any)=><div className="wideRow" key={x.id}><NotebookPen size={18}/><div className="grow"><b>{x.text}</b><span>{x.createdAt||''}</span></div><button className="iconButton" onClick={()=>setData({...data,notes:data.notes.filter((y:any)=>y.id!==x.id)})}><Trash2 size={15}/></button></div>):<p>No notes yet.</p>}</div>
 }
 
-function Documents({data}:{data:AppData}){return <div className="workspace"><Head title="Documents" text="Contracts, change orders, build plans, and other project records in one place."/>
-  {data.docs.length?data.docs.map((x:any)=><div className="wideRow" key={x.id}><FileText size={18}/><div className="grow"><b>{x.type||'Document'}{x.project?' · '+x.project:''}</b><span>{x.customer||''}</span></div><Status value={x.status||'Draft'}/></div>):<p>No documents yet.</p>}
-</div>}
+function Documents({data,setData}:{data:AppData;setData:(d:any)=>void}){
+ const[secureFiles,setSecureFiles]=useState<any[]>([]),[customer,setCustomer]=useState('All'),[project,setProject]=useState('All'),[templateName,setTemplateName]=useState(''),[templateType,setTemplateType]=useState('Estimate'),[templateBody,setTemplateBody]=useState('')
+ useEffect(()=>{fetch('/api/files',{cache:'no-store'}).then(r=>r.ok?r.json():{files:[]}).then(b=>setSecureFiles(b.files||[]))},[])
+ const templates=data.templates||[];const files=secureFiles.filter((f:any)=>(customer==='All'||f.customer===customer)&&(project==='All'||f.project===project))
+ async function openFile(id:string){const r=await fetch('/api/files/'+id);const b=await r.json();if(r.ok&&b.url)window.open(b.url,'_blank','noopener,noreferrer')}
+ function saveTemplate(){if(!templateName.trim()||!templateBody.trim())return;setData({...data,templates:[{id:Date.now(),name:templateName.trim(),type:templateType,body:templateBody.trim(),createdAt:new Date().toISOString()},...templates]});setTemplateName('');setTemplateBody('')}
+ return <div className="workspace"><Head title="Customer File Cabinet & Templates" text="Secure customer/project files plus reusable company templates in one workspace."/>
+ <div className="dashPanel"><div className="dashPanelHead"><div><small>SECURE STORAGE</small><h3>Customer File Cabinet</h3></div></div><div className="builderGrid"><label>Customer<select value={customer} onChange={e=>setCustomer(e.target.value)}><option>All</option>{Array.from(new Set(secureFiles.map((x:any)=>x.customer).filter(Boolean))).map((x:any)=><option key={x}>{x}</option>)}</select></label><label>Project<select value={project} onChange={e=>setProject(e.target.value)}><option>All</option>{Array.from(new Set(secureFiles.map((x:any)=>x.project).filter(Boolean))).map((x:any)=><option key={x}>{x}</option>)}</select></label></div>{files.length?files.map((x:any)=><div className="wideRow" key={x.id}><FileText size={18}/><div className="grow"><b>{x.filename}</b><span>{[x.customer,x.project,x.category].filter(Boolean).join(' · ')}</span></div><button className="primary" onClick={()=>openFile(x.id)}>Open</button></div>):<p>No securely uploaded files match this filter yet.</p>}</div>
+ <div className="dashPanel" style={{marginTop:18}}><div className="dashPanelHead"><div><small>REUSABLE COMPANY INTELLIGENCE</small><h3>Advanced Templates</h3></div></div><div className="builderGrid"><Field label="Template name" value={templateName} set={setTemplateName}/><label>Type<select value={templateType} onChange={e=>setTemplateType(e.target.value)}>{['Estimate','Contract','Scope of Work','Change Order','Invoice Notes','Closeout','Customer Message','Project Checklist'].map(x=><option key={x}>{x}</option>)}</select></label><label className="full">Reusable content<textarea value={templateBody} onChange={e=>setTemplateBody(e.target.value)} placeholder="Add standard scope language, exclusions, checklist items, terms, or company wording…"/></label><button className="primary" onClick={saveTemplate}><Plus/>Save Template</button></div>{templates.length?templates.map((x:any)=><div className="wideRow" key={x.id}><ClipboardList size={18}/><div className="grow"><b>{x.name}</b><span>{x.type} · {x.body.slice(0,120)}{x.body.length>120?'…':''}</span></div><button className="iconButton" onClick={()=>setData({...data,templates:templates.filter((t:any)=>t.id!==x.id)})}><Trash2 size={15}/></button></div>):<p>No reusable templates yet.</p>}</div>
+ <div className="dashPanel" style={{marginTop:18}}><h3>Generated Project Documents</h3>{data.docs.length?data.docs.map((x:any)=><div className="wideRow" key={x.id}><FileText size={18}/><div className="grow"><b>{x.type||'Document'}{x.project?' · '+x.project:''}</b><span>{x.customer||''}</span></div><Status value={x.status||'Draft'}/></div>):<p>No generated documents yet.</p>}</div></div>
+}
 
 function EstimateHub({data,setData}:{data:AppData;setData:(d:any)=>void}){
   const plans=data.docs.filter((x:any)=>x.type==='Build Plan')
