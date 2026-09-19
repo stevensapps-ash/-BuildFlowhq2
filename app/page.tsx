@@ -60,7 +60,7 @@ export default function Page(){
 
   return <div className="compactShell">
     <header className="topbar">
-      <div className="topBrand"><span className="topMark"><HardHat size={19}/></span><div><b>Construction HQ</b><small>{data.settings.businessName||company}</small></div></div>
+      <div className="topBrand"><span className="topMark logoMark"><CHQLogo/></span><div><b>Construction HQ</b><small>{data.settings.businessName||company}</small></div></div>
       <div className="chqSearch"><div className="chqSearchBox"><Search className="chqSearchIcon" size={16}/><input className="chqSearchInput" aria-label="Search Construction HQ" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search Construction HQ…"/>{search&&<button className="chqSearchClear" aria-label="Clear search" onClick={()=>setSearch('')}><X size={15}/></button>}</div>{search&&<div className="chqSearchResults">{searchRows.length?searchRows.map((x:any,i:number)=><button className="chqSearchResult" key={i} onClick={()=>go(x.target)}><b>{x.kind}: {x.title}</b><small>{x.detail}</small></button>):<div className="chqSearchEmpty">No matches found</div>}</div>}</div><nav className="quickNav">
         <button className={section==='Dashboard'?'active':''} onClick={()=>go('Dashboard')}><Home/>Home</button>
         <button className={section==='Projects'?'active':''} onClick={()=>go('Projects')}><FolderKanban/>Jobs</button>
@@ -110,6 +110,8 @@ export default function Page(){
     </nav>
   </div>
 }
+
+function CHQLogo(){return <svg className="chqLogo" viewBox="0 0 96 72" role="img" aria-label="Construction HQ logo"><defs><linearGradient id="gold" x1="0" x2="1"><stop offset="0" stopColor="#fff1c2"/><stop offset=".45" stopColor="#f2a33b"/><stop offset="1" stopColor="#b85c13"/></linearGradient></defs><path d="M8 43 47 10l40 33M18 38V17h12v11M67 26V13h11v21" fill="none" stroke="url(#gold)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M16 44c10-8 22-12 33-12 14 0 27 5 38 14-12 12-25 18-39 18-15 0-28-6-40-18 3-1 5-2 8-2Z" fill="#11181d" stroke="url(#gold)" strokeWidth="3"/><text x="48" y="56" textAnchor="middle" fontFamily="Georgia,serif" fontWeight="700" fontSize="34" fill="url(#gold)">HQ</text><path d="M9 61c20 7 54 7 78-2" fill="none" stroke="#e17a24" strokeWidth="2"/></svg>}
 
 function Dashboard({data,go,role}:{data:AppData,go:(s:string)=>void,role:string}){
   const today=localDate(),todayJobs=data.schedule.filter((x:any)=>x.date===today),unpaid=data.invoices.filter((x:any)=>String(x.status||'').toLowerCase()!=='paid'),unpaidTotal=unpaid.reduce((a:number,x:any)=>a+Number(x.balance??x.amount??0),0),recent=[...data.estimates].slice(0,4)
