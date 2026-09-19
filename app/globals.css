@@ -121,3 +121,12 @@ body{background:#eef1f3!important;color:#172027!important}.topbar{background:#1d
 .hqAssistantInput{display:grid;grid-template-columns:42px 1fr 42px;gap:7px;padding:11px;border-top:1px solid #e3e8eb}.hqAssistantInput input{width:100%;min-width:0;padding:10px!important}.hqAssistantInput button{border:1px solid #d4dce0;background:#fff;color:#34444f;border-radius:9px;display:grid;place-items:center}.hqAssistantInput button svg{width:17px}.hqAssistantInput button.active,.hqAssistantInput button:last-child{background:#f47b20;color:#fff;border-color:#f47b20}
 .hqAssistantHint{display:block;padding:0 14px 13px;color:#75838b;font-size:9px}
 @media(max-width:750px){.hqOrb{right:14px;bottom:84px}.hqAssistant{right:12px;bottom:146px}.hqAssistantReply{min-height:72px}}
+
+
+/* Mobile action-cluster cleanup */
+@media(max-width:750px){
+ .hqOrb{right:12px!important;bottom:82px!important;height:46px!important;min-width:58px!important;padding:0 12px!important;border-radius:23px!important;gap:5px!important;z-index:78!important}
+ .hqOrb svg{width:17px;height:17px}.hqOrb span{font-size:12px}
+ .hqAssistant{right:10px!important;bottom:136px!important;width:calc(100vw - 20px)!important;z-index:79!important}
+ .mobileNav{z-index:80!important}
+}
