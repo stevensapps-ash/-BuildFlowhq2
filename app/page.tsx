@@ -23,7 +23,7 @@ const emptyData:AppData={
 }
 const groups=[
   {label:'Work',items:[['Dashboard',Home],['Projects',FolderKanban],['Schedule',CalendarDays],['Customers',Users],['Contact Book',ContactRound]]},
-  {label:'Create',items:[['AI Estimates',Sparkles],['Contracts',FileSignature],['Change Orders',ClipboardList],['Blueprint Library',FileText]]},
+  {label:'Create',items:[['AI Estimates',Sparkles],['Contracts',FileSignature],['Change Orders',ClipboardList],['Plans Studio',FileText]]},
   {label:'Money',items:[['Invoices',Receipt],['Receipts',WalletCards],['Payroll',DollarSign],['Billing & Tokens',Coins]]},
   {label:'Business',items:[['Before & After',Camera],['Employees',HardHat],['Documents',FileText],['Notes',NotebookPen],['Settings',Settings]]}
 ] as any[]
@@ -55,7 +55,7 @@ export default function Page(){
     ...data.docs.map((x:any)=>({kind:x.type||'Document',title:x.project||x.customer||x.type||'Document',detail:x.customer||'',target:'Documents'})),
     ...data.receipts.map((x:any)=>({kind:'Receipt',title:x.merchant||x.description||'Receipt',detail:[x.customer,x.project].filter(Boolean).join(' · '),target:'Receipts'}))
   ].filter((x:any)=>[x.kind,x.title,x.detail].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,8):[]
-  const createItems=[['Project','Projects'],['AI Estimate','AI Estimates'],['Invoice','Invoices'],['Receipt','Receipts'],['Contract','Contracts'],['Change Order','Change Orders'],['Customer','Customers'],['Contact','Contact Book']] as const
+  const createItems=[['Customer','Customers'],['Project','Projects'],['AI Estimate','AI Estimates'],['Invoice','Invoices'],['Receipt','Receipts'],['AI Plan','Plans Studio'],['Contract','Contracts'],['Change Order','Change Orders'],['Contact','Contact Book']] as const
 
   return <div className="compactShell">
     <header className="topbar">
@@ -80,7 +80,7 @@ export default function Page(){
       <div className="pageTitle"><h1>{section}</h1><p>{data.settings.businessName||company} · {role==='employee'?'Employee workspace':role==='manager'?'Manager workspace':'Owner workspace'}</p></div>{role==='employee'&&<div className="dashPanel" style={{marginBottom:14}}><b>Employee access</b><p style={{marginBottom:0}}>Company-wide financial and billing controls are hidden. Your workspace focuses on assigned jobs, schedule, project details, photos, notes, materials and time activity.</p></div>}
       {activeJob?<JobTracker project={data.projects.find((p:any)=>p.id===activeJob.id)||activeJob} data={data} setData={setData} onClose={()=>setActiveJob(null)}/>:
       section==='Contracts'?<ContractWorkspace data={data} setData={setData} ai={ai}/>:
-      section==='Blueprint Library'?<BlueprintLibrary data={data} setData={setData} ai={ai}/>:
+      section==='Plans Studio'?<BlueprintLibrary data={data} setData={setData} ai={ai}/>:
       section==='Before & After'?<ProjectGallery data={data} setData={setData}/>:
       section==='Receipts'?<ReceiptOrganizer data={data} setData={setData}/>:
       section==='Projects'?<Projects data={data} setData={setData} startJob={setActiveJob}/>:
