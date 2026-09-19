@@ -12,6 +12,7 @@ import JobTracker from './components/JobTracker'
 import BlueprintLibrary from './components/BlueprintLibrary'
 import ProjectGallery from './components/ProjectGallery'
 import ReceiptOrganizer from './components/ReceiptOrganizer'
+import HQAssistant from './components/HQAssistant'
 
 type Project={id:number;customer:string;name:string;status:string;date:string;amount:number}
 type AppData={projects:any[];customers:any[];invoices:any[];notes:any[];estimates:any[];docs:any[];receipts:any[];schedule:any[];employees:any[];payroll:any[];files:any[];timeEntries:any[];settings:any;[key:string]:any}
@@ -76,6 +77,7 @@ export default function Page(){
 
     {createOpen&&<div className="createMenu"><div className="createMenuHead"><b>Create New</b><button onClick={()=>setCreateOpen(false)}><X size={18}/></button></div>{createItems.map(([label,target])=><button key={label} onClick={()=>go(target)}><Plus size={17}/>{label}</button>)}</div>}
 
+    <HQAssistant section={section} go={go} data={data} role={role}/>
     <main className="compactMain">
       <div className="pageTitle"><h1>{section}</h1><p>{data.settings.businessName||company} · {role==='employee'?'Employee workspace':role==='manager'?'Manager workspace':'Owner workspace'}</p></div>{role==='employee'&&<div className="dashPanel" style={{marginBottom:14}}><b>Employee access</b><p style={{marginBottom:0}}>Company-wide financial and billing controls are hidden. Your workspace focuses on assigned jobs, schedule, project details, photos, notes, materials and time activity.</p></div>}
       {activeJob?<JobTracker project={data.projects.find((p:any)=>p.id===activeJob.id)||activeJob} data={data} setData={setData} onClose={()=>setActiveJob(null)}/>:
