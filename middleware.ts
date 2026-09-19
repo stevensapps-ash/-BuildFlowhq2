@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const OWNER_EMAIL = 'stevensapps@icloud.com'
+const ADMIN_EMAILS = new Set(['stevensapps@icloud.com', 'stevensapps31@gmail.com'])
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
@@ -38,8 +38,8 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user) {
-    const isOwner = user.email?.toLowerCase() === OWNER_EMAIL
-    let hasAccess = isOwner
+    const isAdmin = ADMIN_EMAILS.has(user.email?.toLowerCase() || '')
+    let hasAccess = isAdmin
 
     if (!hasAccess) {
       const { data: subscription } = await supabase
