@@ -55,7 +55,7 @@ export default function Page(){
     ...data.docs.map((x:any)=>({kind:x.type||'Document',title:x.project||x.customer||x.type||'Document',detail:x.customer||'',target:'Documents'})),
     ...data.receipts.map((x:any)=>({kind:'Receipt',title:x.merchant||x.description||'Receipt',detail:[x.customer,x.project].filter(Boolean).join(' · '),target:'Receipts'}))
   ].filter((x:any)=>[x.kind,x.title,x.detail].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,8):[]
-  const createItems=[['Customer','Customers'],['Project','Projects'],['AI Estimate','AI Estimates'],['Invoice','Invoices'],['Receipt','Receipts'],['AI Plan','Plans Studio'],['Contract','Contracts'],['Change Order','Change Orders'],['Contact','Contact Book']] as const
+  const createItems=[['Project Setup','Projects'],['Customer','Customers'],['Project','Projects'],['AI Estimate','AI Estimates'],['Invoice','Invoices'],['Receipt','Receipts'],['AI Plan','Plans Studio'],['Contract','Contracts'],['Change Order','Change Orders'],['Contact','Contact Book']] as const
 
   return <div className="compactShell">
     <header className="topbar">
@@ -111,7 +111,8 @@ export default function Page(){
 
 function Dashboard({data,go,role}:{data:AppData,go:(s:string)=>void,role:string}){
   const today=localDate(),todayJobs=data.schedule.filter((x:any)=>x.date===today),unpaid=data.invoices.filter((x:any)=>String(x.status||'').toLowerCase()!=='paid'),unpaidTotal=unpaid.reduce((a:number,x:any)=>a+Number(x.balance??x.amount??0),0),recent=[...data.estimates].slice(0,4)
-  const attention=[...unpaid.filter((x:any)=>String(x.status||'').toLowerCase()==='overdue').map((x:any)=>({text:`Overdue invoice · ${x.customer||x.project||'Customer'}`,target:'Invoices'})),...data.estimates.filter((x:any)=>String(x.status||'').toLowerCase()==='sent').map((x:any)=>({text:`Estimate awaiting approval · ${x.project||x.customer||'Estimate'}`,target:'AI Estimates'})),...data.docs.filter((x:any)=>String(x.status||'').toLowerCase().includes('awaiting')).map((x:any)=>({text:`${x.type||'Document'} awaiting action · ${x.project||x.customer||''}`,target:'Documents'}))].slice(0,6)
+  const openProjects=data.projects.filter((p:any)=>!['Completed','Paid'].includes(String(p.status||'')));const missingNext=openProjects.slice(0,4).map((p:any)=>({text:`${p.name} · Next: ${p.status==='Estimate'?'finish/review estimate':p.status==='Ready to Start'?'contract & schedule':p.status==='In Progress'?'track costs / prepare invoice':'open project'}`,target:'Projects'}));
+  const attention=[...missingNext,...unpaid.filter((x:any)=>String(x.status||'').toLowerCase()==='overdue').map((x:any)=>({text:`Overdue invoice · ${x.customer||x.project||'Customer'}`,target:'Invoices'})),...data.estimates.filter((x:any)=>String(x.status||'').toLowerCase()==='sent').map((x:any)=>({text:`Estimate awaiting approval · ${x.project||x.customer||'Estimate'}`,target:'AI Estimates'})),...data.docs.filter((x:any)=>String(x.status||'').toLowerCase().includes('awaiting')).map((x:any)=>({text:`${x.type||'Document'} awaiting action · ${x.project||x.customer||''}`,target:'Documents'}))].slice(0,6)
   return <><section className="hero"><div><span>CONSTRUCTION HQ</span><h2>Your business, organized for today.</h2><p>See what needs attention and jump straight into the next job, estimate, or invoice.</p></div><button onClick={()=>go('AI Estimates')}><Plus size={17}/> New Estimate</button></section>
   <section className="stats">
     <button className="statButton" onClick={()=>go('Projects')}><Stat label="Active Jobs" value={String(data.projects.filter((p:any)=>p.status==='In Progress').length)} sub="currently active"/></button>
@@ -120,7 +121,7 @@ function Dashboard({data,go,role}:{data:AppData,go:(s:string)=>void,role:string}
   </section>
   {attention.length>0&&<section className="dashPanel" style={{marginBottom:18}}><div className="dashPanelHead"><div><small>ATTENTION</small><h3>Needs Attention</h3></div></div>{attention.map((x:any,i:number)=><button key={i} onClick={()=>go(x.target)} className="wideRow" style={{width:'100%',textAlign:'left',cursor:'pointer'}}><AlertCircle size={18}/><div className="grow"><b>{x.text}</b></div></button>)}</section>}
   <section className="dashboardGrid">
-    <Panel title="Today's Jobs" eyebrow="TODAY" action="View schedule" onClick={()=>go('Schedule')}>
+    <Panel title="Quick Start" eyebrow="WORKFLOW" action="Start project" onClick={()=>go('Projects')}><div className="dashRow"><FolderKanban/><div><b>Create one project record</b><span>Customer → Estimate → Plans → Contract → Schedule → Work → Invoice → Closeout</span></div></div><button className="primary" onClick={()=>go('Projects')}><Plus size={16}/> Start Project Setup</button></Panel><Panel title="Today's Jobs" eyebrow="TODAY" action="View schedule" onClick={()=>go('Schedule')}>
       {todayJobs.length?todayJobs.slice(0,4).map((x:any)=><div className="dashRow" key={x.id}><Clock3/><div><b>{x.project}</b><span>{x.start}–{x.end} · {x.worker}</span></div></div>):<EmptyAction icon={CalendarDays} text="Nothing scheduled for today." action="Add to schedule" onClick={()=>go('Schedule')}/>}
     </Panel>
     <Panel title="Unpaid Invoices" eyebrow="MONEY" action="View invoices" onClick={()=>go('Invoices')}>
