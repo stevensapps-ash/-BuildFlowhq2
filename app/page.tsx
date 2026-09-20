@@ -75,7 +75,7 @@ export default function Page(){
       </div>}
     </header>
 
-    {createOpen&&<div className="createMenu"><div className="createMenuHead"><b>Create New</b><button onClick={()=>setCreateOpen(false)}><X size={18}/></button></div>{createItems.map(([label,target])=><button key={label} onClick={()=>go(target)}><Plus size={17}/>{label}</button>)}</div>}
+    {createOpen&&<div className="createMenu"><div className="createMenuHead"><b>Create New</b><button type="button" onClick={()=>setCreateOpen(false)}><X size={18}/></button></div>{createItems.map(([label,target])=><button type="button" key={label} onClick={()=>go(target)}><Plus size={17}/>{label}</button>)}</div>}
 
     <HQAssistant section={section} go={go} data={data} role={role}/>
     <main className="compactMain">
@@ -106,7 +106,7 @@ export default function Page(){
       <button className={section==='Projects'?'active':''} onClick={()=>go('Projects')}><FolderKanban/><span>Jobs</span></button>
       <button className={section==='AI Estimates'?'active':''} onClick={()=>go('AI Estimates')}><Sparkles/><span>Estimate</span></button>
       <button className="mobileCreate" aria-expanded={createOpen} onClick={()=>{setToolsOpen(false);setCreateOpen(v=>!v)}}><PlusCircle/><span>New</span></button>
-      <button className={section==='Documents'?'active':''} onClick={()=>go('Documents')}><FolderOpen/><span>Files</span></button>
+      <button type="button" className={section==='Invoices'?'active':''} onClick={()=>go('Invoices')}><Receipt/><span>Invoices</span></button>
       <button className={toolsOpen?'active':''} aria-expanded={toolsOpen} onClick={()=>{setCreateOpen(false);setToolsOpen(v=>!v)}}><Menu/><span>More</span></button>
     </nav>
   </div>
