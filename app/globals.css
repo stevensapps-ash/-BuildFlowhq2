@@ -216,3 +216,14 @@ html{-webkit-text-size-adjust:100%}body{font-size:15px;line-height:1.5}button,in
  .hqBanner{background:#111b22!important;border:1px solid #203744!important}.hqBanner button{border-color:#38a9ff!important}.hqBanner svg{color:#38a9ff!important}
  .mobileNav{background:#080d10!important;border-top-color:#203744!important}.mobileNav button{color:#8298a5!important}.mobileNav button.active{background:#102638!important;color:#38a9ff!important}.mobileNav .mobileCreate{color:#38a9ff!important}
 }
+
+/* Mobile toolbar fit correction — keep all primary actions on one row */
+@media(max-width:750px){
+ .mobileNav{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;height:76px!important;padding:6px 5px max(7px,env(safe-area-inset-bottom))!important;gap:1px!important;align-items:start!important;overflow:visible!important}
+ .mobileNav button{min-width:0!important;width:100%!important;height:62px!important;padding:5px 1px!important;border-radius:12px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:2px!important;font-size:10px!important;line-height:1!important;white-space:nowrap!important}
+ .mobileNav button svg{width:20px!important;height:20px!important;flex:0 0 auto!important}
+ .mobileNav .mobileCreate svg{width:31px!important;height:31px!important}
+ .mobileNav .mobileCreate{transform:none!important}
+ .mobileNav button span{display:block!important;max-width:100%!important;overflow:hidden!important;text-overflow:clip!important}
+ .compactMain{padding-bottom:98px!important}
+}
