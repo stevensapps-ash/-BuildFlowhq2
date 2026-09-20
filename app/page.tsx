@@ -26,7 +26,7 @@ const groups=[
   {label:'Work',items:[['Dashboard',Home],['Projects',FolderKanban],['Schedule',CalendarDays],['Customers',Users],['Contact Book',ContactRound]]},
   {label:'Create',items:[['AI Estimates',Sparkles],['Contracts',FileSignature],['Change Orders',ClipboardList],['Plans Studio',FileText]]},
   {label:'Money',items:[['Invoices',Receipt],['Receipts',WalletCards],['Payroll',DollarSign],['Billing & Tokens',Coins]]},
-  {label:'Business',items:[['Before & After',Camera],['Employees',HardHat],['Documents',FileText],['Notes',NotebookPen],['Settings',Settings]]}
+  {label:'Business',items:[['Before & After',Camera],['Documents',FileText],['Notes',NotebookPen],['Settings',Settings]]}
 ] as any[]
 const money=(n:number)=>'$'+Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2})
 const localDate=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
@@ -70,7 +70,7 @@ export default function Page(){
       </nav>
       {toolsOpen&&<div className="toolMenu">
         <div className="toolMenuHead"><b>Construction HQ Tools</b><button onClick={()=>setToolsOpen(false)}><X/></button></div>
-        {groups.filter(g=>role!=='employee'||!['Money'].includes(g.label)).map(g=><div className="toolGroup" key={g.label}><small>{g.label}</small><div>{g.items.map(([n,I]:any)=><button key={n} onClick={()=>go(n)} className={section===n?'active':''}><I size={17}/><span>{n}</span></button>)}</div></div>)}
+        {groups.map(g=><div className="toolGroup" key={g.label}><small>{g.label}</small><div>{g.items.map(([n,I]:any)=><button key={n} onClick={()=>go(n)} className={section===n?'active':''}><I size={17}/><span>{n}</span></button>)}</div></div>)}
         <div className="toolGroup"><small>Account</small><div><button onClick={()=>location.href='/login'}><LogIn size={17}/>Sign in</button><button onClick={()=>location.href='/logout'}><LogOut size={17}/>Sign out</button></div></div>
       </div>}
     </header>
@@ -79,7 +79,7 @@ export default function Page(){
 
     <HQAssistant section={section} go={go} data={data} role={role}/>
     <main className="compactMain">
-      <div className="pageTitle"><h1>{section}</h1><p>{data.settings.businessName||company} · {role==='employee'?'Employee workspace':role==='manager'?'Manager workspace':'Owner workspace'}</p></div>{role==='employee'&&<div className="dashPanel" style={{marginBottom:14}}><b>Employee access</b><p style={{marginBottom:0}}>Company-wide financial and billing controls are hidden. Your workspace focuses on assigned jobs, schedule, project details, photos, notes, materials and time activity.</p></div>}
+      <div className="pageTitle"><h1>{section}</h1><p>{data.settings.businessName||company} · {role==='manager'?'Manager workspace':'Owner workspace'}</p></div>
       {activeJob?<JobTracker project={data.projects.find((p:any)=>p.id===activeJob.id)||activeJob} data={data} setData={setData} onClose={()=>setActiveJob(null)}/>:
       section==='Contracts'?<ContractWorkspace data={data} setData={setData} ai={ai}/>:
       section==='Plans Studio'?<BlueprintLibrary data={data} setData={setData} ai={ai}/>:
@@ -92,7 +92,7 @@ export default function Page(){
       section==='Contact Book'?<ContactBook data={data} setData={setData}/>:
       section==='Invoices'?<Invoices data={data} setData={setData}/>:
       section==='Change Orders'?<ChangeOrders data={data} setData={setData}/>:
-      section==='Employees'?<Employees data={data} setData={setData}/>:
+
       section==='Notes'?<Notes data={data} setData={setData}/>:
       section==='Settings'?<BusinessSettings data={data} setData={setData}/>:
       section==='Documents'?<Documents data={data} setData={setData}/>:
@@ -122,7 +122,7 @@ function Dashboard({data,go,role}:{data:AppData,go:(s:string)=>void,role:string}
   <section className="stats">
     <button className="statButton" onClick={()=>go('Projects')}><Stat label="Active Jobs" value={String(data.projects.filter((p:any)=>p.status==='In Progress').length)} sub="currently active"/></button>
     <button className="statButton" onClick={()=>go('Schedule')}><Stat label="Today's Jobs" value={String(todayJobs.length)} sub="scheduled today"/></button>
-    {role!=='employee'&&<button className="statButton" onClick={()=>go('Invoices')}><Stat label="Unpaid Invoices" value={String(unpaid.length)} sub={unpaid.length?money(unpaidTotal)+' outstanding':'nothing outstanding'}/></button>}
+    {<button className="statButton" onClick={()=>go('Invoices')}><Stat label="Unpaid Invoices" value={String(unpaid.length)} sub={unpaid.length?money(unpaidTotal)+' outstanding':'nothing outstanding'}/></button>}
   </section>
   <section className="quickActions"><div className="quickActionsHead"><h3>Quick Actions</h3><button onClick={()=>go('Documents')}>View all <span>›</span></button></div><div className="quickActionGrid">
     <button onClick={()=>go('AI Estimates')}><FilePlus2/><b>New Estimate</b><small>AI powered</small></button>
