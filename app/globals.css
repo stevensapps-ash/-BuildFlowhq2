@@ -184,3 +184,6 @@ html{-webkit-text-size-adjust:100%}body{font-size:15px;line-height:1.5}button,in
  .hqBanner{border-radius:14px!important}.hqBanner>div{gap:9px!important}.hqBanner b{font-size:14px!important}
  .mobileNav{background:#fff!important;border-top:1px solid #e1e6e9!important;box-shadow:0 -5px 18px rgba(20,31,38,.07)!important}.mobileNav button{background:transparent!important}.mobileNav button.active{background:#fff3ea!important;color:#c95e17!important}
 }
+
+/* Remove legacy floating controls; Hey HQ now lives in dashboard banner */
+@media(max-width:750px){.hqOrb{display:none!important}.hqAssistant{right:10px!important;left:10px!important;bottom:88px!important;width:auto!important;z-index:95!important}.mobileNav{z-index:90!important}.hqBanner{position:relative!important;z-index:1!important}.quickActions{padding-bottom:0!important}}
