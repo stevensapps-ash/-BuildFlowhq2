@@ -52,7 +52,7 @@ export default function AdminPaymentsPage() {
   return <main style={{minHeight:'100vh',background:'#f5f7fb',padding:'28px 16px',fontFamily:'system-ui',color:'#172033'}}>
     <section style={{maxWidth:980,margin:'0 auto'}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,marginBottom:20}}>
-        <div><h1 style={{margin:0}}>Payment approvals</h1><p style={{color:'#5e6a78'}}>Verify the Venmo payment first, then approve the matching submission here.</p></div>
+        <div><h1 style={{margin:0}}>Payment approvals</h1><p style={{color:'#5e6a78'}}>Legacy manual payment approvals. New subscriptions are handled through Moov.</p></div>
         <button onClick={load} disabled={loading} style={{padding:'10px 14px',borderRadius:10,border:'1px solid #cfd6df',background:'#fff',fontWeight:700}}><RefreshCw size={16}/> Refresh</button>
       </div>
       {message && <div style={{padding:12,borderRadius:10,background:'#fff',border:'1px solid #dfe5ed',marginBottom:14}}>{message}</div>}
