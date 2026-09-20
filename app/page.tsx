@@ -25,7 +25,7 @@ const emptyData:AppData={
 const groups=[
   {label:'Work',items:[['Dashboard',Home],['Projects',FolderKanban],['Schedule',CalendarDays],['Customers',Users],['Contact Book',ContactRound]]},
   {label:'Create',items:[['AI Estimates',Sparkles],['Contracts',FileSignature],['Change Orders',ClipboardList],['Plans Studio',FileText]]},
-  {label:'Money',items:[['Invoices',Receipt],['Receipts',WalletCards],['Payroll',DollarSign],['Billing & Tokens',Coins]]},
+  {label:'Money',items:[['Invoices',Receipt],['Receipts',WalletCards],['Billing & Tokens',Coins]]},
   {label:'Business',items:[['Before & After',Camera],['Documents',FileText],['Notes',NotebookPen],['Settings',Settings]]}
 ] as any[]
 const money=(n:number)=>'$'+Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2})
@@ -48,7 +48,7 @@ export default function Page(){
   useEffect(()=>{if(!loaded||!['owner','manager'].includes(role))return;const t=setTimeout(()=>{void fetch('/api/workspace',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).then(r=>{if(!r.ok)console.error('Workspace save failed',r.status)}).catch(()=>console.error('Workspace save failed'))},450);return()=>clearTimeout(t)},[data,loaded,role])
 
   if(!loaded)return <div className="loading"><HardHat/><b>Loading workspace…</b></div>
-  const go=(s:string)=>{if(s==='Billing & Tokens'){location.href='/subscribe';return}setSection(s);setActiveJob(null);setToolsOpen(false);setCreateOpen(false);setSearch('')}
+  const go=(s:string)=>{if(s==='Billing & Tokens'){location.href='/subscribe';return}if(s==='Jobs'){setSection('Projects')}else if(s==='Files'){setSection('Documents')}else setSection(s);setActiveJob(null);setToolsOpen(false);setCreateOpen(false);setSearch('')}
   const searchRows=search.trim()?[
     ...data.customers.map((x:any)=>({kind:'Customer',title:x.name||x.customer,detail:x.phone||x.email||x.address||'',target:'Customers'})),
     ...data.projects.map((x:any)=>({kind:'Job',title:x.name,detail:x.customer||'',target:'Projects'})),
