@@ -105,7 +105,7 @@ export default function Page(){
       <button className={section==='Dashboard'?'active':''} onClick={()=>go('Dashboard')}><Home/><span>Home</span></button>
       <button className={section==='Projects'?'active':''} onClick={()=>go('Projects')}><FolderKanban/><span>Jobs</span></button>
       <button className="mobileCreate" onClick={()=>setCreateOpen(!createOpen)}><PlusCircle/><span>New</span></button>
-      <button className={section==='Schedule'?'active':''} onClick={()=>go('Schedule')}><CalendarDays/><span>Schedule</span></button>
+      <button className={section==='Documents'?'active':''} onClick={()=>go('Documents')}><FolderOpen/><span>Files</span></button>
       <button onClick={()=>setToolsOpen(!toolsOpen)}><Menu/><span>More</span></button>
     </nav>
   </div>
