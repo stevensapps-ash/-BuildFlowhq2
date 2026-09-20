@@ -40,9 +40,7 @@ export async function middleware(request: NextRequest) {
   if (user) {
     const email = user.email?.toLowerCase() || ''
     const isAdmin = ADMIN_EMAILS.has(email)
-    // Automated E2E accounts use the reserved example.com domain and contain no real customer data.
-    const isE2ETest = /^buildflow\.e2e\.\d+@example\.com$/.test(email)
-    let hasAccess = isAdmin || isE2ETest
+    let hasAccess = isAdmin
 
     if (!hasAccess) {
       const { data: subscription } = await supabase
