@@ -48,7 +48,7 @@ export default function Page(){
   useEffect(()=>{if(!loaded||!['owner','manager'].includes(role))return;const t=setTimeout(()=>{void fetch('/api/workspace',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).then(r=>{if(!r.ok)console.error('Workspace save failed',r.status)}).catch(()=>console.error('Workspace save failed'))},450);return()=>clearTimeout(t)},[data,loaded,role])
 
   if(!loaded)return <div className="loading"><HardHat/><b>Loading workspace…</b></div>
-  const go=(s:string)=>{if(s==='Billing & Tokens'){location.href='/subscribe';return}if(s==='Jobs'){setSection('Projects')}else if(s==='Files'){setSection('Documents')}else setSection(s);setActiveJob(null);setToolsOpen(false);setCreateOpen(false);setSearch('')}
+  const go=(s:string)=>{if(s==='Billing & Tokens'){location.href='/subscribe';return}const target=s==='Jobs'?'Projects':s==='Files'?'Documents':s;setSection(target);setActiveJob(null);setToolsOpen(false);setCreateOpen(false);setSearch('');if(typeof window!=='undefined')window.setTimeout(()=>window.scrollTo({top:0,behavior:'auto'}),0)}
   const searchRows=search.trim()?[
     ...data.customers.map((x:any)=>({kind:'Customer',title:x.name||x.customer,detail:x.phone||x.email||x.address||'',target:'Customers'})),
     ...data.projects.map((x:any)=>({kind:'Job',title:x.name,detail:x.customer||'',target:'Projects'})),
@@ -65,7 +65,7 @@ export default function Page(){
         <button className={section==='Dashboard'?'active':''} onClick={()=>go('Dashboard')}><Home/>Home</button>
         <button className={section==='Projects'?'active':''} onClick={()=>go('Projects')}><FolderKanban/>Jobs</button>
         <button className={section==='AI Estimates'?'active':''} onClick={()=>go('AI Estimates')}><Sparkles/>Estimate</button>
-        <button className={section==='Invoices'?'active':''} onClick={()=>go('Invoices')}><Receipt/>Invoices</button>
+        <button type="button" className={section==='Invoices'?'active':''} onClick={(e)=>{e.preventDefault();e.stopPropagation();go('Invoices')}}><Receipt/>Invoices</button>
         <button className="toolsBtn" onClick={()=>{setCreateOpen(false);setToolsOpen(v=>!v)}}><Menu/>More<ChevronDown size={14}/></button>
       </nav>
       {toolsOpen&&<div className="toolMenu">
