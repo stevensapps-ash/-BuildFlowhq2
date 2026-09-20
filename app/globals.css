@@ -173,3 +173,14 @@ html{-webkit-text-size-adjust:100%}body{font-size:15px;line-height:1.5}button,in
  .topbar{padding-bottom:10px!important}.chqSearch{margin-top:7px!important}.chqSearchInput{height:42px!important;min-height:42px!important}
  .topBrand small{display:none!important}.topBrand b{font-size:18px!important}.topMark.logoMark{width:52px!important;height:43px!important}.chqLogo{width:52px!important;height:43px!important}
 }
+
+/* Final clean mobile home target */
+@media(max-width:750px){
+ .topbar{padding:12px 14px 10px!important}.topBrand{min-height:48px!important}.topBrand b{font-size:18px!important;line-height:1.15!important}.topMark.logoMark{width:48px!important;height:42px!important}.chqLogo{width:48px!important;height:42px!important}
+ .chqSearch{margin-top:8px!important}.chqSearchInput{height:44px!important;border-radius:11px!important}
+ .hero{margin:12px 0 12px!important;padding:20px!important;border-radius:17px!important}.hero h2{max-width:280px!important;font-size:25px!important}.hero p{max-width:300px!important;font-size:12px!important}.hero button{margin-top:4px!important}
+ .stats{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important}.statButton{min-width:0!important}.stat{height:112px!important;padding:12px 9px!important}.stat b{font-size:9px!important}.stat strong{font-size:26px!important}.stat span{font-size:9px!important}
+ .quickActionsHead h3{font-size:18px!important}.quickActionsHead button{font-size:12px!important}.quickActionGrid button{box-shadow:0 3px 10px rgba(20,31,38,.05)!important;border-color:#e1e6e9!important}
+ .hqBanner{border-radius:14px!important}.hqBanner>div{gap:9px!important}.hqBanner b{font-size:14px!important}
+ .mobileNav{background:#fff!important;border-top:1px solid #e1e6e9!important;box-shadow:0 -5px 18px rgba(20,31,38,.07)!important}.mobileNav button{background:transparent!important}.mobileNav button.active{background:#fff3ea!important;color:#c95e17!important}
+}
