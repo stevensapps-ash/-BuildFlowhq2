@@ -66,7 +66,7 @@ export default function Page(){
         <button className={section==='Projects'?'active':''} onClick={()=>go('Projects')}><FolderKanban/>Jobs</button>
         <button className={section==='AI Estimates'?'active':''} onClick={()=>go('AI Estimates')}><Sparkles/>Estimate</button>
         <button className={section==='Receipts'?'active':''} onClick={()=>go('Receipts')}><WalletCards/>Receipts</button>
-        <button className="toolsBtn" onClick={()=>setToolsOpen(!toolsOpen)}><Menu/>More<ChevronDown size={14}/></button>
+        <button className="toolsBtn" onClick={()=>{setCreateOpen(false);setToolsOpen(v=>!v)}}><Menu/>More<ChevronDown size={14}/></button>
       </nav>
       {toolsOpen&&<div className="toolMenu">
         <div className="toolMenuHead"><b>Construction HQ Tools</b><button onClick={()=>setToolsOpen(false)}><X/></button></div>
@@ -104,9 +104,9 @@ export default function Page(){
     <nav className="mobileNav">
       <button className={section==='Dashboard'?'active':''} onClick={()=>go('Dashboard')}><Home/><span>Home</span></button>
       <button className={section==='Projects'?'active':''} onClick={()=>go('Projects')}><FolderKanban/><span>Jobs</span></button>
-      <button className="mobileCreate" onClick={()=>setCreateOpen(!createOpen)}><PlusCircle/><span>New</span></button>
+      <button className="mobileCreate" onClick={()=>{setToolsOpen(false);setCreateOpen(v=>!v)}}><PlusCircle/><span>New</span></button>
       <button className={section==='Documents'?'active':''} onClick={()=>go('Documents')}><FolderOpen/><span>Files</span></button>
-      <button onClick={()=>setToolsOpen(!toolsOpen)}><Menu/><span>More</span></button>
+      <button onClick={()=>{setCreateOpen(false);setToolsOpen(v=>!v)}}><Menu/><span>More</span></button>
     </nav>
   </div>
 }
