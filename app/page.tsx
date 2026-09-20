@@ -66,7 +66,7 @@ export default function Page(){
         <button className={section==='Projects'?'active':''} onClick={()=>go('Projects')}><FolderKanban/>Jobs</button>
         <button className={section==='AI Estimates'?'active':''} onClick={()=>go('AI Estimates')}><Sparkles/>Estimate</button>
         <button type="button" className={section==='Invoices'?'active':''} onClick={(e)=>{e.preventDefault();e.stopPropagation();go('Invoices')}}><Receipt/>Invoices</button>
-        <button className="toolsBtn" onClick={()=>{setCreateOpen(false);setToolsOpen(v=>!v)}}><Menu/>More<ChevronDown size={14}/></button>
+        <button type="button" className="toolsBtn" aria-label="Open menu" aria-expanded={toolsOpen} onClick={(e)=>{e.preventDefault();e.stopPropagation();setCreateOpen(false);setToolsOpen(v=>!v)}}><Menu/>More<ChevronDown size={14}/></button>
       </nav>
       {toolsOpen&&<div className="toolMenu">
         <div className="toolMenuHead"><b>Construction HQ Tools</b><button onClick={()=>setToolsOpen(false)}><X/></button></div>
@@ -107,7 +107,7 @@ export default function Page(){
       <button className={section==='AI Estimates'?'active':''} onClick={()=>go('AI Estimates')}><Sparkles/><span>Estimate</span></button>
       <button className="mobileCreate" aria-expanded={createOpen} onClick={()=>{setToolsOpen(false);setCreateOpen(v=>!v)}}><PlusCircle/><span>New</span></button>
       <button type="button" className={section==='Invoices'?'active':''} onClick={()=>go('Invoices')}><Receipt/><span>Invoices</span></button>
-      <button className={toolsOpen?'active':''} aria-expanded={toolsOpen} onClick={()=>{setCreateOpen(false);setToolsOpen(v=>!v)}}><Menu/><span>More</span></button>
+      <button type="button" className={toolsOpen?'active':''} aria-label="Open menu" aria-expanded={toolsOpen} onClick={(e)=>{e.preventDefault();e.stopPropagation();setCreateOpen(false);setToolsOpen(v=>!v)}}><Menu/><span>More</span></button>
     </nav>
   </div>
 }
