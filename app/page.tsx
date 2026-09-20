@@ -227,44 +227,49 @@ function ContactBook({data,setData}:{data:AppData;setData:(d:any)=>void}){
 }
 
 function Invoices({data,setData}:{data:AppData;setData:(d:any)=>void}){
-  const[project,setProject]=useState(''),[customer,setCustomer]=useState(''),[due,setDue]=useState(''),[status,setStatus]=useState('Draft'),[taxRate,setTaxRate]=useState('0'),[discount,setDiscount]=useState('0'),[notes,setNotes]=useState(''),[invoiceMessage,setInvoiceMessage]=useState(''),[items,setItems]=useState<any[]>([{id:Date.now(),description:'',qty:1,rate:0}])
-  function pickProject(v:string){setProject(v);const p=data.projects.find((x:any)=>x.name===v);if(p){setCustomer(p.customer||'');const estimate=data.estimates.find((x:any)=>x.project===v&&String(x.status||'').toLowerCase()==='approved');const total=Number(estimate?.amount||p.amount||0);if(total>0)setItems([{id:Date.now(),description:v,qty:1,rate:total}])}}
-  function patchItem(id:any,key:string,value:any){setItems(items.map(x=>x.id===id?{...x,[key]:value}:x))}
-  const subtotal=items.reduce((a,x)=>a+Number(x.qty||0)*Number(x.rate||0),0),discountAmount=Math.max(0,Number(discount||0)),taxable=Math.max(0,subtotal-discountAmount),tax=taxable*Math.max(0,Number(taxRate||0))/100,total=taxable+tax
-  function add(){const cleanCustomer=String(customer||'').trim();const validItems=items.filter(x=>String(x.description||'').trim()&&Number(x.qty)>0&&Number(x.rate)>=0);if(!cleanCustomer){setInvoiceMessage('Enter a customer before saving the invoice.');return}if(!validItems.length){setInvoiceMessage('Add a line-item description, quantity, and rate.');return}if(total<=0){setInvoiceMessage('Invoice total must be greater than $0.');return}const id=Date.now();const invoice={id,number:'INV-'+String(id).slice(-6),project:String(project||'').trim(),customer:cleanCustomer,items:validItems.map(x=>({...x,description:String(x.description||'').trim(),qty:Number(x.qty),rate:Number(x.rate)})),subtotal,discount:discountAmount,taxRate:Number(taxRate||0),tax,amount:total,balance:status==='Paid'?0:total,due,status,notes:String(notes||'').trim(),createdAt:localDate()};setData({...data,invoices:[invoice,...(data.invoices||[])],docs:[{id:id+1,type:'Invoice',project:invoice.project,customer:invoice.customer,status:invoice.status,invoiceId:id,createdAt:localDate()},...(data.docs||[])]});setInvoiceMessage('Invoice '+invoice.number+' saved successfully.');setProject('');setCustomer('');setDue('');setStatus('Draft');setTaxRate('0');setDiscount('0');setNotes('');setItems([{id:Date.now()+2,description:'',qty:1,rate:0}])}
-  function updateStatus(x:any,s:string){const nextBalance=s==='Paid'?0:(String(x.status||'')==='Paid'?Number(x.amount||0):Number(x.balance??x.amount??0));setData({...data,invoices:data.invoices.map((y:any)=>y.id===x.id?{...y,status:s,balance:nextBalance}:y),docs:data.docs.map((d:any)=>d.type==='Invoice'&&d.invoiceId===x.id?{...d,status:s}:d)})}
-  function removeInvoice(x:any){if(!confirm('Delete this invoice?'))return;setData({...data,invoices:data.invoices.filter((y:any)=>y.id!==x.id),docs:data.docs.filter((d:any)=>!(d.type==='Invoice'&&d.invoiceId===x.id))})}
-  function printInvoice(x:any){
-    const esc=(v:any)=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
-    const rows=(x.items||[{description:x.project||'Services',qty:1,rate:x.amount}]).map((i:any)=>{
-      return '<tr><td>'+esc(i.description||'')+'</td><td>'+Number(i.qty||1)+'</td><td>'+money(Number(i.rate||0))+'</td><td>'+money(Number(i.qty||1)*Number(i.rate||0))+'</td></tr>'
-    }).join('')
-    const w=window.open('','_blank')
-    if(!w)return
-    const html=[
-      '<html><head><title>',esc(x.number||'Invoice'),'</title>',
-      '<style>body{font-family:Arial;padding:40px;color:#111}h1{margin-bottom:4px}table{width:100%;border-collapse:collapse;margin-top:24px}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}.totals{text-align:right;margin-top:24px;font-size:18px}</style>',
-      '</head><body><h1>INVOICE</h1><b>',esc(data.settings.businessName||'Construction HQ'),'</b>',
-      '<p>',esc(x.number||''),' · ',esc(x.createdAt||''),'</p><h3>Bill to: ',esc(x.customer||''),'</h3><p>',esc(x.project||''),'</p>',
-      '<table><thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead><tbody>',rows,'</tbody></table>',
-      '<div class=totals><p>Subtotal: ',money(Number(x.subtotal??x.amount)),'</p>',
-      Number(x.discount||0)?'<p>Discount: -'+money(Number(x.discount))+'</p>':'',
-      Number(x.tax||0)?'<p>Tax: '+money(Number(x.tax))+'</p>':'',
-      '<h2>Total: ',money(Number(x.amount||0)),'</h2></div><p>Due: ',esc(x.due||'Upon receipt'),'</p><p>',esc(x.notes||''),'</p></body></html>'
-    ].join('')
-    w.document.write(html)
-    w.document.close()
-    w.focus()
-    setTimeout(()=>w.print(),250)
+  const freshItem=()=>({id:Date.now()+Math.random(),description:'',qty:1,rate:''})
+  const[project,setProject]=useState(''),[customer,setCustomer]=useState(''),[invoiceDate,setInvoiceDate]=useState(localDate()),[due,setDue]=useState(''),[taxRate,setTaxRate]=useState('0'),[discount,setDiscount]=useState('0'),[notes,setNotes]=useState(''),[message,setMessage]=useState(''),[saving,setSaving]=useState(false),[items,setItems]=useState<any[]>([freshItem()])
+  const subtotal=items.reduce((sum,x)=>sum+(Number(x.qty)||0)*(Number(x.rate)||0),0)
+  const discountAmount=Math.min(subtotal,Math.max(0,Number(discount)||0))
+  const taxable=Math.max(0,subtotal-discountAmount),tax=taxable*Math.max(0,Number(taxRate)||0)/100,total=taxable+tax
+  function pickProject(v:string){setProject(v);setMessage('');const p=(data.projects||[]).find((x:any)=>x.name===v);if(!p)return;setCustomer(String(p.customer||''));const estimate=(data.estimates||[]).find((x:any)=>x.project===v&&String(x.status||'').toLowerCase()==='approved');const amount=Number(estimate?.amount||p.amount||0);if(amount>0)setItems([{id:Date.now(),description:v||'Project services',qty:1,rate:String(amount)}])}
+  function patchItem(id:any,key:string,value:any){setMessage('');setItems(prev=>prev.map(x=>x.id===id?{...x,[key]:value}:x))}
+  async function saveInvoice(){
+    if(saving)return
+    const cleanCustomer=customer.trim(),cleanItems=items.filter(x=>String(x.description||'').trim()&&(Number(x.qty)||0)>0&&(Number(x.rate)||0)>=0)
+    if(!cleanCustomer){setMessage('Customer is required.');return}
+    if(!cleanItems.length){setMessage('Add at least one line item with a description, quantity and rate.');return}
+    if(total<=0){setMessage('Invoice total must be greater than $0.');return}
+    setSaving(true);setMessage('Saving invoice…')
+    const id=Date.now(),invoice={id,number:'INV-'+String(id).slice(-6),project:project.trim(),customer:cleanCustomer,items:cleanItems.map(x=>({...x,description:String(x.description).trim(),qty:Number(x.qty),rate:Number(x.rate)})),invoiceDate,subtotal,discount:discountAmount,taxRate:Number(taxRate)||0,tax,amount:total,balance:total,due,status:'Draft',notes:notes.trim(),createdAt:invoiceDate}
+    const next={...data,invoices:[invoice,...(data.invoices||[])],docs:[{id:id+1,type:'Invoice',project:invoice.project,customer:invoice.customer,status:'Draft',invoiceId:id,createdAt:invoiceDate},...(data.docs||[])]}
+    try{
+      const r=await fetch('/api/workspace',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(next)})
+      if(!r.ok){const body=await r.json().catch(()=>({}));throw Error(body.error||'Invoice could not be saved.')}
+      setData(next);setMessage('Invoice '+invoice.number+' saved.')
+      setProject('');setCustomer('');setInvoiceDate(localDate());setDue('');setTaxRate('0');setDiscount('0');setNotes('');setItems([freshItem()])
+    }catch(e:any){setMessage(e?.message||'Invoice could not be saved. Please try again.')}finally{setSaving(false)}
   }
-  return <div className="workspace"><Head title="Invoice Maker" text="Build itemized invoices, calculate totals, save them to the customer record, and print or save as PDF."/><div className="builderGrid">
-    <label>Project<select value={project} onChange={e=>pickProject(e.target.value)}><option value="">Optional project</option>{data.projects.map((p:any)=><option key={p.id}>{p.name}</option>)}</select></label><Field label="Customer" value={customer} set={setCustomer}/><label>Due date<input type="date" value={due} onChange={e=>setDue(e.target.value)}/></label><label>Status<select value={status} onChange={e=>setStatus(e.target.value)}><option>Draft</option><option>Sent</option><option>Overdue</option><option>Paid</option></select></label>
-    <div style={{gridColumn:'1/-1'}}><b>Line items</b>{items.map((x:any)=><div className="wideRow" key={x.id}><input className="grow" aria-label="Line item description" value={x.description} onChange={e=>patchItem(x.id,'description',e.target.value)} placeholder="Labor, materials, service…"/><input aria-label="Quantity" type="number" min="0" step="0.01" value={x.qty} onChange={e=>patchItem(x.id,'qty',Number(e.target.value||0))}/><input aria-label="Rate" type="number" min="0" step="0.01" value={x.rate} onChange={e=>patchItem(x.id,'rate',Number(e.target.value||0))}/><strong>{money(Number(x.qty||0)*Number(x.rate||0))}</strong>{items.length>1&&<button className="iconButton" onClick={()=>setItems(items.filter(i=>i.id!==x.id))}><Trash2 size={15}/></button>}</div>)}<button onClick={()=>setItems([...items,{id:Date.now(),description:'',qty:1,rate:0}])}><Plus size={16}/>Add line item</button></div>
-    <Field label="Discount $" value={discount} set={setDiscount}/><Field label="Tax %" value={taxRate} set={setTaxRate}/><label style={{gridColumn:'1/-1'}}>Invoice notes<textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Payment terms, thank-you note, scope details…"/></label>{invoiceMessage&&<div role="status" style={{gridColumn:'1/-1',padding:'12px 14px',border:'1px solid currentColor',borderRadius:10}}><b>{invoiceMessage}</b></div>}<div><b>Subtotal {money(subtotal)}</b><br/><span>Tax {money(tax)} · Total {money(total)}</span></div><button type="button" className="primary" onClick={add}><Plus/>Save Invoice</button>
+  async function updateStatus(x:any,s:string){const balance=s==='Paid'?0:Number(x.amount||0);const next={...data,invoices:(data.invoices||[]).map((y:any)=>y.id===x.id?{...y,status:s,balance}:y),docs:(data.docs||[]).map((d:any)=>d.type==='Invoice'&&d.invoiceId===x.id?{...d,status:s}:d)};setData(next)}
+  function removeInvoice(x:any){if(!confirm('Delete this draft invoice?'))return;setData({...data,invoices:(data.invoices||[]).filter((y:any)=>y.id!==x.id),docs:(data.docs||[]).filter((d:any)=>!(d.type==='Invoice'&&d.invoiceId===x.id))})}
+  function printInvoice(x:any){const esc=(v:any)=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');const rows=(x.items||[]).map((a:any)=>'<tr><td>'+esc(a.description)+'</td><td>'+Number(a.qty||0)+'</td><td>'+money(Number(a.rate||0))+'</td><td>'+money(Number(a.qty||0)*Number(a.rate||0))+'</td></tr>').join('');const w=window.open('','_blank');if(!w){setMessage('Allow pop-ups to open the printable invoice.');return}w.document.write('<html><head><title>'+esc(x.number)+'</title><style>body{font-family:Arial;padding:40px;color:#111}table{width:100%;border-collapse:collapse;margin-top:24px}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}.right{text-align:right}</style></head><body><h1>INVOICE</h1><b>'+esc(data.settings.businessName||'Construction HQ')+'</b><p>'+esc(x.number)+' · '+esc(x.invoiceDate||x.createdAt)+'</p><h3>Bill to: '+esc(x.customer)+'</h3><p>'+esc(x.project)+'</p><table><thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead><tbody>'+rows+'</tbody></table><div class="right"><p>Subtotal: '+money(x.subtotal)+'</p><p>Tax: '+money(x.tax)+'</p><h2>Total: '+money(x.amount)+'</h2></div><p>Due: '+esc(x.due||'Upon receipt')+'</p><p>'+esc(x.notes)+'</p></body></html>');w.document.close();setTimeout(()=>w.print(),250)}
+  return <div className="workspace"><Head title="Invoices" text="Create a draft invoice, save it to the company workspace, then print or mark it sent or paid."/>
+    <div className="builderGrid">
+      <label>Customer *<input value={customer} onChange={e=>{setCustomer(e.target.value);setMessage('')}} placeholder="Customer or company name"/></label>
+      <label>Project<select value={project} onChange={e=>pickProject(e.target.value)}><option value="">Optional project</option>{(data.projects||[]).map((p:any)=><option key={p.id} value={p.name}>{p.name}</option>)}</select></label>
+      <label>Invoice date<input type="date" value={invoiceDate} onChange={e=>setInvoiceDate(e.target.value)}/></label>
+      <label>Due date<input type="date" value={due} onChange={e=>setDue(e.target.value)}/></label>
+      <div style={{gridColumn:'1/-1'}}><b>Line items *</b>{items.map((x:any)=><div className="wideRow" key={x.id}><input className="grow" value={x.description} onChange={e=>patchItem(x.id,'description',e.target.value)} placeholder="Labor, materials, service"/><input aria-label="Quantity" inputMode="decimal" type="number" min="0.01" step="0.01" value={x.qty} onChange={e=>patchItem(x.id,'qty',e.target.value)}/><input aria-label="Rate" inputMode="decimal" type="number" min="0" step="0.01" value={x.rate} onChange={e=>patchItem(x.id,'rate',e.target.value)} placeholder="Rate"/><strong>{money((Number(x.qty)||0)*(Number(x.rate)||0))}</strong>{items.length>1&&<button type="button" className="iconButton" onClick={()=>setItems(v=>v.filter(i=>i.id!==x.id))}><Trash2 size={15}/></button>}</div>)}<button type="button" onClick={()=>setItems(v=>[...v,freshItem()])}><Plus size={16}/>Add line item</button></div>
+      <label>Discount $<input inputMode="decimal" type="number" min="0" step="0.01" value={discount} onChange={e=>setDiscount(e.target.value)}/></label>
+      <label>Tax %<input inputMode="decimal" type="number" min="0" step="0.01" value={taxRate} onChange={e=>setTaxRate(e.target.value)}/></label>
+      <label style={{gridColumn:'1/-1'}}>Notes<textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Payment terms or scope notes"/></label>
+      <div><b>Subtotal {money(subtotal)}</b><br/><span>Discount {money(discountAmount)} · Tax {money(tax)}</span><br/><strong>Total {money(total)}</strong></div>
+      <button type="button" className="primary" disabled={saving} onClick={()=>void saveInvoice()}>{saving?<Clock3 size={18}/>:<Plus size={18}/>} {saving?'Saving…':'Save Draft Invoice'}</button>
+      {message&&<div role="status" aria-live="polite" style={{gridColumn:'1/-1',padding:'12px 14px',border:'1px solid currentColor',borderRadius:10}}><b>{message}</b></div>}
+    </div>
+    {(data.invoices||[]).length?(data.invoices||[]).map((x:any)=><div className="wideRow" key={x.id}><Receipt size={18}/><div className="grow"><b>{x.number} · {x.customer}</b><span>{x.project?x.project+' · ':''}{x.due?'Due '+x.due:'Due upon receipt'}</span></div><strong>{money(x.amount)}</strong><select aria-label="Invoice status" value={x.status||'Draft'} onChange={e=>void updateStatus(x,e.target.value)}><option>Draft</option><option>Sent</option><option>Paid</option><option>Void</option></select><button type="button" className="primary" onClick={()=>printInvoice(x)}>PDF / Print</button>{(x.status||'Draft')==='Draft'&&<button type="button" className="iconButton" title="Delete draft" onClick={()=>removeInvoice(x)}><Trash2 size={15}/></button>}</div>):<p>No invoices yet. Create a draft invoice above.</p>}
   </div>
-  {data.invoices.length?data.invoices.map((x:any)=><div className="wideRow" key={x.id}><Receipt size={18}/><div className="grow"><b>{x.number?x.number+' · ':''}{x.customer}{x.project?' · '+x.project:''}</b><span>{x.due?'Due '+x.due:'Due upon receipt'} · {x.status||'Draft'}</span></div><strong>{money(x.amount)}</strong><select aria-label="Invoice status" value={x.status||'Draft'} onChange={e=>updateStatus(x,e.target.value)}><option>Draft</option><option>Sent</option><option>Overdue</option><option>Paid</option></select><button className="primary" onClick={()=>printInvoice(x)}>PDF / Print</button><button className="iconButton" title="Delete invoice" onClick={()=>removeInvoice(x)}><Trash2 size={15}/></button></div>):<p>No invoices yet.</p>}</div>
 }
-
 function ChangeOrders({data,setData}:{data:AppData;setData:(d:any)=>void}){
   const[project,setProject]=useState(''),[description,setDescription]=useState(''),[amount,setAmount]=useState('')
   const rows=data.docs.filter((x:any)=>x.type==='Change Order')
