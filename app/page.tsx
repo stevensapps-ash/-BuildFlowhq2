@@ -235,11 +235,27 @@ function Invoices({data,setData}:{data:AppData;setData:(d:any)=>void}){
   function updateStatus(x:any,s:string){const nextBalance=s==='Paid'?0:(String(x.status||'')==='Paid'?Number(x.amount||0):Number(x.balance??x.amount??0));setData({...data,invoices:data.invoices.map((y:any)=>y.id===x.id?{...y,status:s,balance:nextBalance}:y),docs:data.docs.map((d:any)=>d.type==='Invoice'&&d.invoiceId===x.id?{...d,status:s}:d)})}
   function removeInvoice(x:any){if(!confirm('Delete this invoice?'))return;setData({...data,invoices:data.invoices.filter((y:any)=>y.id!==x.id),docs:data.docs.filter((d:any)=>!(d.type==='Invoice'&&d.invoiceId===x.id))})}
   function printInvoice(x:any){
-    const esc=(v:any)=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-    const rows=(x.items||[{description:x.project||'Services',qty:1,rate:x.amount}]).map((i:any)=>'<tr><td>'+esc(i.description||'')+'</td><td>'+Number(i.qty||1)+'</td><td>'+money(Number(i.rate||0))+'</td><td>'+money(Number(i.qty||1)*Number(i.rate||0))+'</td></tr>').join('')
-    const w=window.open('','_blank');if(!w)return
-    w.document.write('<html><head><title>'+esc(x.number||'Invoice')+'</title><style>body{font-family:Arial;padding:40px;color:#111}h1{margin-bottom:4px}table{width:100%;border-collapse:collapse;margin-top:24px}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}.totals{text-align:right;margin-top:24px;font-size:18px}</style></head><body><h1>INVOICE</h1><b>'+esc(data.settings.businessName||'Construction HQ')+'</b><p>'+esc(x.number||'')+' · '+esc(x.createdAt||'')+'</p><h3>Bill to: '+esc(x.customer||'')+'</h3><p>'+esc(x.project||'')+'</p><table><thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead><tbody>'+rows+'</tbody></table><div class="totals"><p>Subtotal: '+money(Number(x.subtotal??x.amount))+'</p>'+(Number(x.discount||0)?'<p>Discount: -'+money(Number(x.discount))+'</p>':'')+(Number(x.tax||0)?'<p>Tax: '+money(Number(x.tax))+'</p>':'')+'<h2>Total: '+money(Number(x.amount||0))+'</h2></div><p>Due: '+esc(x.due||'Upon receipt')+'</p><p>'+esc(x.notes||'')+'</p></body></html>')
-    w.document.close();w.focus();setTimeout(()=>w.print(),250)
+    const esc=(v:any)=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+    const rows=(x.items||[{description:x.project||'Services',qty:1,rate:x.amount}]).map((i:any)=>{
+      return '<tr><td>'+esc(i.description||'')+'</td><td>'+Number(i.qty||1)+'</td><td>'+money(Number(i.rate||0))+'</td><td>'+money(Number(i.qty||1)*Number(i.rate||0))+'</td></tr>'
+    }).join('')
+    const w=window.open('','_blank')
+    if(!w)return
+    const html=[
+      '<html><head><title>',esc(x.number||'Invoice'),'</title>',
+      '<style>body{font-family:Arial;padding:40px;color:#111}h1{margin-bottom:4px}table{width:100%;border-collapse:collapse;margin-top:24px}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}.totals{text-align:right;margin-top:24px;font-size:18px}</style>',
+      '</head><body><h1>INVOICE</h1><b>',esc(data.settings.businessName||'Construction HQ'),'</b>',
+      '<p>',esc(x.number||''),' · ',esc(x.createdAt||''),'</p><h3>Bill to: ',esc(x.customer||''),'</h3><p>',esc(x.project||''),'</p>',
+      '<table><thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead><tbody>',rows,'</tbody></table>',
+      '<div class=totals><p>Subtotal: ',money(Number(x.subtotal??x.amount)),'</p>',
+      Number(x.discount||0)?'<p>Discount: -'+money(Number(x.discount))+'</p>':'',
+      Number(x.tax||0)?'<p>Tax: '+money(Number(x.tax))+'</p>':'',
+      '<h2>Total: ',money(Number(x.amount||0)),'</h2></div><p>Due: ',esc(x.due||'Upon receipt'),'</p><p>',esc(x.notes||''),'</p></body></html>'
+    ].join('')
+    w.document.write(html)
+    w.document.close()
+    w.focus()
+    setTimeout(()=>w.print(),250)
   }
   return <div className="workspace"><Head title="Invoice Maker" text="Build itemized invoices, calculate totals, save them to the customer record, and print or save as PDF."/><div className="builderGrid">
     <label>Project<select value={project} onChange={e=>pickProject(e.target.value)}><option value="">Optional project</option>{data.projects.map((p:any)=><option key={p.id}>{p.name}</option>)}</select></label><Field label="Customer" value={customer} set={setCustomer}/><label>Due date<input type="date" value={due} onChange={e=>setDue(e.target.value)}/></label><label>Status<select value={status} onChange={e=>setStatus(e.target.value)}><option>Draft</option><option>Sent</option><option>Overdue</option><option>Paid</option></select></label>
