@@ -23,11 +23,23 @@ const AI_COSTS=[
 ]
 
 export default function SubscribePage(){
-  const [sent,setSent]=useState(false)
   const [plan,setPlan]=useState<'monthly'|'yearly'>('monthly')
   const [submitting,setSubmitting]=useState(false)
   const [paymentError,setPaymentError]=useState('')
-  async function submitPayment(){setSubmitting(true);try{const r=await fetch('/api/subscription/payment-submitted',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan})});if(!r.ok)throw Error();setSent(true)}finally{setSubmitting(false)}}
+  async function startMoovCheckout(){
+    setSubmitting(true)
+    setPaymentError('')
+    try {
+      const r=await fetch('/api/moov/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan})})
+      const body=await r.json().catch(()=>({}))
+      if(!r.ok||!body.url) throw new Error(body.error||'Moov checkout is not ready.')
+      window.location.assign(body.url)
+    } catch (error) {
+      setPaymentError(error instanceof Error?error.message:'Unable to start checkout.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
   return <main style={{minHeight:'100vh',background:'#f5f7fb',padding:'32px 18px',fontFamily:'system-ui',color:'#172033'}}>
     <section style={{maxWidth:680,margin:'0 auto',background:'#fff',border:'1px solid #e4e8ef',borderRadius:22,padding:28,boxShadow:'0 12px 35px rgba(20,35,60,.08)'}}>
       <div style={{display:'flex',alignItems:'center',gap:10,fontWeight:800,fontSize:22}}><HardHat/>Construction HQ</div>
