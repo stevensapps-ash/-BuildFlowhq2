@@ -204,3 +204,15 @@ html{-webkit-text-size-adjust:100%}body{font-size:15px;line-height:1.5}button,in
  .mobileNav{height:78px!important;background:rgba(255,255,255,.98)!important;border-top:1px solid #e1e6e9!important;box-shadow:0 -5px 18px rgba(20,31,38,.07)!important}.mobileNav button{color:#6d7a82!important}.mobileNav button svg{width:22px!important;height:22px!important}.mobileNav button.active{background:#fff2e9!important;color:#c85f19!important}.mobileNav .mobileCreate{color:#e66f20!important}.mobileNav .mobileCreate svg{width:34px!important;height:34px!important}
  footer{display:none!important}
 }
+
+/* Selected design: 1 — Executive Industrial */
+@media(max-width:750px){
+ body,.appShell{background:#0b1115!important;color:#edf4f7!important}
+ .topbar{background:#080d10!important;border-bottom:1px solid #18364a!important}.topBrand b{color:#f7fbfd!important}.topBrand small{color:#7f98a8!important}.chqSearchInput{background:#101a21!important;border:1px solid #31526a!important;color:#f6fbff!important}.chqSearchInput::placeholder{color:#8fa3b0!important}
+ .compactMain{background:#0b1115!important}
+ .hero{background:linear-gradient(145deg,#101b23,#172a38)!important;border:1px solid #1e4058!important;box-shadow:0 10px 28px rgba(0,0,0,.28)!important}.hero>div>span{color:#38a9ff!important}.hero h2{color:#fff!important}.hero p{color:#c6d4dc!important}.hero button{background:#087be8!important;color:#fff!important}
+ .stat{background:#111b22!important;border-color:#203744!important;box-shadow:none!important}.stat b,.stat span{color:#91a5b1!important}.stat strong{color:#eaf6ff!important}
+ .quickActionsHead h3{color:#f3f8fa!important}.quickActionsHead button{color:#38a9ff!important}.quickActionGrid button{background:#111b22!important;border-color:#203744!important;color:#edf6fa!important;box-shadow:none!important}.quickActionGrid button b{color:#edf6fa!important}.quickActionGrid svg{color:#41aef7!important}
+ .hqBanner{background:#111b22!important;border:1px solid #203744!important}.hqBanner button{border-color:#38a9ff!important}.hqBanner svg{color:#38a9ff!important}
+ .mobileNav{background:#080d10!important;border-top-color:#203744!important}.mobileNav button{color:#8298a5!important}.mobileNav button.active{background:#102638!important;color:#38a9ff!important}.mobileNav .mobileCreate{color:#38a9ff!important}
+}
