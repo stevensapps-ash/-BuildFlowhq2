@@ -45,7 +45,7 @@ export default function Page(){
   const[createOpen,setCreateOpen]=useState(false)
 
   useEffect(()=>{fetch('/api/workspace',{cache:'no-store'}).then(async r=>{if(r.status===401){location.href='/login';return}const w=await r.json();setCompany(w.companyName||'Construction Company');setRole(w.role||'owner');setData(norm(w.data||{}));setLoaded(true)})},[])
-  useEffect(()=>{if(!loaded)return;const t=setTimeout(()=>fetch('/api/workspace',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),450);return()=>clearTimeout(t)},[data,loaded])
+  useEffect(()=>{if(!loaded||!['owner','manager'].includes(role))return;const t=setTimeout(()=>{void fetch('/api/workspace',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).then(r=>{if(!r.ok)console.error('Workspace save failed',r.status)}).catch(()=>console.error('Workspace save failed'))},450);return()=>clearTimeout(t)},[data,loaded,role])
 
   if(!loaded)return <div className="loading"><HardHat/><b>Loading workspace…</b></div>
   const go=(s:string)=>{if(s==='Billing & Tokens'){location.href='/subscribe';return}setSection(s);setActiveJob(null);setToolsOpen(false);setCreateOpen(false);setSearch('')}
