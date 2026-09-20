@@ -101,12 +101,13 @@ export default function Page(){
       <footer>Construction HQ · Contractor business workspace</footer>
     </main>
 
-    <nav className="mobileNav">
+    <nav className="mobileNav" aria-label="Primary navigation">
       <button className={section==='Dashboard'?'active':''} onClick={()=>go('Dashboard')}><Home/><span>Home</span></button>
       <button className={section==='Projects'?'active':''} onClick={()=>go('Projects')}><FolderKanban/><span>Jobs</span></button>
-      <button className="mobileCreate" onClick={()=>{setToolsOpen(false);setCreateOpen(v=>!v)}}><PlusCircle/><span>New</span></button>
+      <button className={section==='AI Estimates'?'active':''} onClick={()=>go('AI Estimates')}><Sparkles/><span>Estimate</span></button>
+      <button className="mobileCreate" aria-expanded={createOpen} onClick={()=>{setToolsOpen(false);setCreateOpen(v=>!v)}}><PlusCircle/><span>New</span></button>
       <button className={section==='Documents'?'active':''} onClick={()=>go('Documents')}><FolderOpen/><span>Files</span></button>
-      <button onClick={()=>{setCreateOpen(false);setToolsOpen(v=>!v)}}><Menu/><span>More</span></button>
+      <button className={toolsOpen?'active':''} aria-expanded={toolsOpen} onClick={()=>{setCreateOpen(false);setToolsOpen(v=>!v)}}><Menu/><span>More</span></button>
     </nav>
   </div>
 }
