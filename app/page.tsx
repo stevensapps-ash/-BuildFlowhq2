@@ -80,7 +80,7 @@ export default function Page(){
     <HQAssistant section={section} go={go} data={data} role={role}/>
     <main className="compactMain">
       <div className="pageTitle"><h1>{section}</h1><p>{data.settings.businessName||company} · {role==='manager'?'Manager workspace':'Owner workspace'}</p></div>
-      {activeJob?<JobTracker project={data.projects.find((p:any)=>p.id===activeJob.id)||activeJob} data={data} setData={setData} onClose={()=>setActiveJob(null)}/>:
+      {activeJob?<JobTracker project={data.projects.find((p:any)=>p.id===activeJob.id)||activeJob} data={data} setData={setData} onClose={()=>setActiveJob(null)} onCreateInvoice={(p)=>{setActiveJob(null);setSection('Invoices');setSearch('');if(typeof window!=='undefined')window.setTimeout(()=>window.scrollTo({top:0,behavior:'auto'}),0)}}/>:
       section==='Contracts'?<ContractWorkspace data={data} setData={setData} ai={ai}/>:
       section==='Plans Studio'?<BlueprintLibrary data={data} setData={setData} ai={ai}/>:
       section==='Before & After'?<ProjectGallery data={data} setData={setData}/>:
