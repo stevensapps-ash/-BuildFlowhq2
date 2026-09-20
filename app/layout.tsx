@@ -1,12 +1,10 @@
 import './globals.css'
-import BuildPlansShortcut from './components/BuildPlansShortcut'
-import JobShortcut from './components/JobShortcut'
 
 export const metadata = {
   title: 'Construction HQ',
   description: 'The operating system for contractors and construction companies.',
   manifest: '/manifest.webmanifest',
-  themeColor: '#f4a622',
+  themeColor: '#1d252b',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -19,5 +17,5 @@ export const metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="en"><body>{children}<JobShortcut/><BuildPlansShortcut/></body></html>
+  return <html lang="en"><body>{children}</body></html>
 }
