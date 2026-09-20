@@ -187,3 +187,20 @@ html{-webkit-text-size-adjust:100%}body{font-size:15px;line-height:1.5}button,in
 
 /* Remove legacy floating controls; Hey HQ now lives in dashboard banner */
 @media(max-width:750px){.hqOrb{display:none!important}.hqAssistant{right:10px!important;left:10px!important;bottom:88px!important;width:auto!important;z-index:95!important}.mobileNav{z-index:90!important}.hqBanner{position:relative!important;z-index:1!important}.quickActions{padding-bottom:0!important}}
+
+/* Construction HQ mobile redesign v2 */
+@media(max-width:750px){
+ body{background:#f4f6f7!important;color:#172027!important}
+ .appShell{background:#f4f6f7!important}
+ .topbar{background:#182127!important;border-bottom:0!important;padding:14px 16px 12px!important;box-shadow:none!important}
+ .topBrand{gap:10px!important}.topBrand b{font-size:18px!important;letter-spacing:-.2px!important}.topMark.logoMark{width:46px!important;height:40px!important}.chqLogo{width:46px!important;height:40px!important}
+ .quickNav .toolsBtn{background:transparent!important;border:0!important;color:#b9c3c9!important}
+ .chqSearch{margin-top:10px!important}.chqSearchInput{height:46px!important;background:#253039!important;border:1px solid #45535c!important;color:#fff!important;border-radius:13px!important;box-shadow:none!important}.chqSearchInput::placeholder{color:#aeb9bf!important}
+ .compactMain{padding:14px 14px 96px!important;max-width:760px!important;margin:0 auto!important}
+ .hero{background:linear-gradient(145deg,#202b32,#303c44)!important;border:0!important;border-radius:18px!important;padding:22px!important;box-shadow:0 8px 24px rgba(20,31,38,.10)!important}.hero>div>span{color:#ff8a36!important}.hero h2{font-size:26px!important;letter-spacing:-.7px!important}.hero p{color:#d7dde1!important}.hero button{background:#f47b20!important;border:0!important;border-radius:12px!important;box-shadow:none!important}
+ .stats{gap:8px!important}.statButton{border:0!important;background:transparent!important}.stat{height:108px!important;background:#fff!important;border:1px solid #e1e6e9!important;border-radius:15px!important;box-shadow:0 3px 12px rgba(20,31,38,.04)!important}.stat b{color:#687780!important}.stat strong{color:#172027!important}.stat span{color:#7b8991!important}
+ .quickActionsHead{padding:0 2px!important}.quickActionsHead h3{font-size:19px!important;letter-spacing:-.3px!important}.quickActionsHead button{color:#d9681b!important}.quickActionGrid{gap:9px!important}.quickActionGrid button{min-height:92px!important;background:#fff!important;border:1px solid #e1e6e9!important;border-radius:15px!important;box-shadow:0 3px 12px rgba(20,31,38,.04)!important}.quickActionGrid button:active{transform:scale(.98)}.quickActionGrid svg{color:#e66f20!important}.quickActionGrid b{font-size:11px!important}
+ .hqBanner{background:#182127!important;border-radius:16px!important;padding:14px 15px!important;box-shadow:0 5px 16px rgba(20,31,38,.10)!important}.hqBanner svg{color:#36c991!important}.hqBanner button{border-color:#36c991!important;min-height:40px!important}
+ .mobileNav{height:78px!important;background:rgba(255,255,255,.98)!important;border-top:1px solid #e1e6e9!important;box-shadow:0 -5px 18px rgba(20,31,38,.07)!important}.mobileNav button{color:#6d7a82!important}.mobileNav button svg{width:22px!important;height:22px!important}.mobileNav button.active{background:#fff2e9!important;color:#c85f19!important}.mobileNav .mobileCreate{color:#e66f20!important}.mobileNav .mobileCreate svg{width:34px!important;height:34px!important}
+ footer{display:none!important}
+}
