@@ -40,10 +40,12 @@ async function getContext() {
     .maybeSingle()
 
   if (membershipError) {
-    console.error('BuildFlow workspace membership lookup failed', membershipError.message)
+    console.error('Construction HQ workspace membership lookup failed', membershipError.message)
     return { error: NextResponse.json({ error: 'Workspace membership could not be loaded' }, { status: 500 }) }
   }
   if (!membership) return { error: NextResponse.json({ error: 'No company workspace found' }, { status: 403 }) }
+
+  if (membership.role === 'employee') return { error: NextResponse.json({ error: 'Worker accounts have moved to the separate worker app' }, { status: 403 }) }
 
   return { supabase, user, membership }
 }
@@ -58,15 +60,15 @@ export async function GET() {
     supabase.from('workspace_state').select('data,updated_at').eq('company_id', membership.company_id).maybeSingle()
   ])
 
-  if (companyError) console.error('BuildFlow company lookup failed', companyError.message)
+  if (companyError) console.error('Construction HQ company lookup failed', companyError.message)
   if (workspaceError) {
-    console.error('BuildFlow workspace state lookup failed', workspaceError.message)
+    console.error('Construction HQ workspace state lookup failed', workspaceError.message)
     return NextResponse.json({ error: 'Workspace state could not be loaded' }, { status: 500 })
   }
 
   return NextResponse.json({
     companyId: membership.company_id,
-    companyName: company?.name || 'BuildFlow Company',
+    companyName: company?.name || 'Construction Company',
     role: membership.role,
     data: membership.role === 'employee' ? employeeView(workspace?.data || {}) : (workspace?.data || {}),
     updatedAt: workspace?.updated_at || null
@@ -85,7 +87,7 @@ export async function PUT(request: Request) {
     .upsert({ company_id: membership.company_id, data: body, updated_at: new Date().toISOString() }, { onConflict: 'company_id' })
 
   if (error) {
-    console.error('BuildFlow workspace save failed', error.message)
+    console.error('Construction HQ workspace save failed', error.message)
     return NextResponse.json({ error: 'Workspace could not be saved' }, { status: 500 })
   }
   return NextResponse.json({ ok: true })
