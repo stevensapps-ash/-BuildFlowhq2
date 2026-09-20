@@ -161,3 +161,15 @@ html{-webkit-text-size-adjust:100%}body{font-size:15px;line-height:1.5}button,in
 
 /* Construction HQ header emblem */
 .topMark.logoMark{width:58px!important;height:48px!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;overflow:visible!important;box-shadow:none!important}.chqLogo{display:block;width:58px;height:48px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.3))}@media(max-width:750px){.topMark.logoMark{width:58px!important;height:48px!important}.chqLogo{width:58px;height:48px}.topBrand{gap:9px!important}}
+
+/* Mobile declutter pass */
+@media(max-width:750px){
+ .pageTitle{display:none!important}
+ .hero{margin-top:10px!important;padding:18px!important}.hero>div>span{font-size:9px!important;letter-spacing:2px!important}.hero h2{font-size:23px!important;line-height:1.08!important;margin:7px 0 9px!important}.hero p{font-size:12px!important;margin:0 0 14px!important}.hero button{min-height:46px!important}
+ .stats{margin:12px 0 16px!important}.stat{padding:12px 9px!important}.stat b{font-size:10px!important}.stat strong{font-size:24px!important}.stat span{font-size:9px!important}
+ .quickActions{margin:14px 0!important}.quickActionsHead{margin-bottom:8px!important}.quickActionGrid{grid-template-columns:repeat(3,1fr)!important;gap:7px!important}.quickActionGrid button{min-height:86px!important;border-radius:12px!important}.quickActionGrid small{display:none!important}.quickActionGrid b{font-size:10px!important}.quickActionGrid svg{width:21px!important;height:21px!important}
+ .hqBanner{padding:12px 14px!important;margin:14px 0!important}.hqBanner small{display:none!important}.hqBanner button{min-width:78px!important;min-height:40px!important}
+ .dashboardGrid{display:none!important}
+ .topbar{padding-bottom:10px!important}.chqSearch{margin-top:7px!important}.chqSearchInput{height:42px!important;min-height:42px!important}
+ .topBrand small{display:none!important}.topBrand b{font-size:18px!important}.topMark.logoMark{width:52px!important;height:43px!important}.chqLogo{width:52px!important;height:43px!important}
+}
