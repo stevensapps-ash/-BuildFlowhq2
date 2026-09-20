@@ -1,6 +1,6 @@
 'use client'
 
-import {useEffect,useState} from 'react'
+import {useEffect,useRef,useState} from 'react'
 import {
   AlertCircle, CalendarDays, Camera, ChevronDown, ClipboardList, Coins, DollarSign,
   FileSignature, FileText, FolderKanban, HardHat, Home, LogIn, LogOut, Menu,
@@ -34,7 +34,7 @@ function norm(d:any):AppData{return{...emptyData,...d,projects:d?.projects||[],c
 async function ai(mode:string,input:string){const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode,input})});const b=await r.json().catch(()=>({}));if(!r.ok)throw Error('AI draft could not be generated.');return String(b.text||'')}
 
 export default function Page(){
-  const[section,setSection]=useState('Dashboard')
+  const[section,setSection]=useState('Dashboard'),[invoiceSourceProject,setInvoiceSourceProject]=useState<Project|null>(null)
   const[data,setData]=useState<AppData>(emptyData)
   const[loaded,setLoaded]=useState(false)
   const[company,setCompany]=useState('Construction Company')
@@ -80,7 +80,7 @@ export default function Page(){
     <HQAssistant section={section} go={go} data={data} role={role}/>
     <main className="compactMain">
       <div className="pageTitle"><h1>{section}</h1><p>{data.settings.businessName||company} · {role==='manager'?'Manager workspace':'Owner workspace'}</p></div>
-      {activeJob?<JobTracker project={data.projects.find((p:any)=>p.id===activeJob.id)||activeJob} data={data} setData={setData} onClose={()=>setActiveJob(null)} onCreateInvoice={(p)=>{setActiveJob(null);setSection('Invoices');setSearch('');if(typeof window!=='undefined')window.setTimeout(()=>window.scrollTo({top:0,behavior:'auto'}),0)}}/>:
+      {activeJob?<JobTracker project={data.projects.find((p:any)=>p.id===activeJob.id)||activeJob} data={data} setData={setData} onClose={()=>setActiveJob(null)} onCreateInvoice={(p)=>{setInvoiceSourceProject(p);setActiveJob(null);setSection('Invoices');setSearch('');if(typeof window!=='undefined')window.setTimeout(()=>window.scrollTo({top:0,behavior:'auto'}),0)}}/>:
       section==='Contracts'?<ContractWorkspace data={data} setData={setData} ai={ai}/>:
       section==='Plans Studio'?<BlueprintLibrary data={data} setData={setData} ai={ai}/>:
       section==='Before & After'?<ProjectGallery data={data} setData={setData}/>:
@@ -90,7 +90,7 @@ export default function Page(){
       section==='Dashboard'?<Dashboard data={data} go={go} role={role}/>:
       section==='Customers'?<Customers data={data} setData={setData}/>:
       section==='Contact Book'?<ContactBook data={data} setData={setData}/>:
-      section==='Invoices'?<Invoices data={data} setData={setData}/>:
+      section==='Invoices'?<Invoices data={data} setData={setData} initialProject={invoiceSourceProject} onInitialProjectHandled={()=>setInvoiceSourceProject(null)}/>:
       section==='Change Orders'?<ChangeOrders data={data} setData={setData}/>:
 
       section==='Notes'?<Notes data={data} setData={setData}/>:
@@ -226,15 +226,17 @@ function ContactBook({data,setData}:{data:AppData;setData:(d:any)=>void}){
   </div>
 }
 
-function Invoices({data,setData}:{data:AppData;setData:(d:any)=>void}){
+function Invoices({data,setData,initialProject,onInitialProjectHandled}:{data:AppData;setData:(d:any)=>void;initialProject?:Project|null;onInitialProjectHandled?:()=>void}){
   const freshItem=()=>({id:Date.now()+Math.random(),description:'',qty:1,rate:''})
+  const autoStarted=useRef(false)
   const[project,setProject]=useState(''),[customer,setCustomer]=useState(''),[invoiceDate,setInvoiceDate]=useState(localDate()),[due,setDue]=useState(''),[taxRate,setTaxRate]=useState('0'),[discount,setDiscount]=useState('0'),[notes,setNotes]=useState(''),[message,setMessage]=useState(''),[saving,setSaving]=useState(false),[generating,setGenerating]=useState(false),[items,setItems]=useState<any[]>([freshItem()])
   const subtotal=items.reduce((sum,x)=>sum+(Number(x.qty)||0)*(Number(x.rate)||0),0)
   const discountAmount=Math.min(subtotal,Math.max(0,Number(discount)||0))
   const taxable=Math.max(0,subtotal-discountAmount),tax=taxable*Math.max(0,Number(taxRate)||0)/100,total=taxable+tax
   function pickProject(v:string){setProject(v);setMessage('');const p=(data.projects||[]).find((x:any)=>x.name===v);if(!p)return;setCustomer(String(p.customer||''));const estimate=(data.estimates||[]).find((x:any)=>x.project===v&&String(x.status||'').toLowerCase()==='approved');const amount=Number(estimate?.amount||p.amount||0);if(amount>0)setItems([{id:Date.now(),description:v||'Project services',qty:1,rate:String(amount)}])}
   function patchItem(id:any,key:string,value:any){setMessage('');setItems(prev=>prev.map(x=>x.id===id?{...x,[key]:value}:x))}
-  async function generateInvoice(){if(generating)return;if(!project){setMessage('Choose a project so AI can build the invoice from verified job information.');return}const p=(data.projects||[]).find((x:any)=>x.name===project);const estimates=(data.estimates||[]).filter((x:any)=>x.project===project);setGenerating(true);setMessage('AI is building the invoice draft…');try{const raw=await ai('invoice',['Customer: '+String(customer||p?.customer||''),'Project: '+project,'Project amount: '+String(p?.amount||0),'Estimates: '+JSON.stringify(estimates)].join('\n'));const parsed=JSON.parse(raw);const nextItems=Array.isArray(parsed.items)?parsed.items.filter((x:any)=>String(x.description||'').trim()).map((x:any,i:number)=>({id:Date.now()+i,description:String(x.description||''),qty:Number(x.qty)||1,rate:Number(x.rate)||0})):[];if(!nextItems.length)throw Error('AI did not return invoice line items.');setItems(nextItems);if(parsed.notes)setNotes(String(parsed.notes));if(Number(parsed.dueDays)>0){const d=new Date();d.setDate(d.getDate()+Number(parsed.dueDays));setDue([d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'))}setMessage('AI invoice draft created. Review it, then save the draft.')}catch(e:any){setMessage(e?.message||'AI invoice could not be generated.')}finally{setGenerating(false)}}
+  async function generateInvoice(projectName?:string){if(generating)return;const selected=projectName||project;if(!selected){setMessage('Choose a project so AI can build the invoice from verified job information.');return}const p=(data.projects||[]).find((x:any)=>x.name===selected);const selectedCustomer=String(p?.customer||customer||'');const estimates=(data.estimates||[]).filter((x:any)=>x.project===selected);setGenerating(true);setMessage('AI is building the invoice draft…');try{const raw=await ai('invoice',['Customer: '+selectedCustomer,'Project: '+selected,'Project amount: '+String(p?.amount||0),'Estimates: '+JSON.stringify(estimates)].join('\n'));const parsed=JSON.parse(raw);const nextItems=Array.isArray(parsed.items)?parsed.items.filter((x:any)=>String(x.description||'').trim()).map((x:any,i:number)=>({id:Date.now()+i,description:String(x.description||''),qty:Number(x.qty)||1,rate:Number(x.rate)||0})):[];if(!nextItems.length)throw Error('AI did not return invoice line items.');setItems(nextItems);if(parsed.notes)setNotes(String(parsed.notes));if(Number(parsed.dueDays)>0){const d=new Date();d.setDate(d.getDate()+Number(parsed.dueDays));setDue([d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'))}setMessage('AI invoice draft created. Review it, then save the draft.')}catch(e:any){setMessage(e?.message||'AI invoice could not be generated.')}finally{setGenerating(false)}}
+  useEffect(()=>{if(!initialProject||autoStarted.current)return;autoStarted.current=true;setProject(initialProject.name);setCustomer(String(initialProject.customer||''));setMessage('Building detailed invoice from '+initialProject.name+'…');void generateInvoice(initialProject.name).finally(()=>onInitialProjectHandled?.())},[initialProject])
   async function saveInvoice(){
     if(saving)return
     const cleanCustomer=customer.trim(),cleanItems=items.filter(x=>String(x.description||'').trim()&&(Number(x.qty)||0)>0&&(Number(x.rate)||0)>=0)
