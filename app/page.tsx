@@ -49,7 +49,7 @@ export default function Page(){
   useEffect(()=>{if(!loaded||!['owner','manager'].includes(role))return;const t=setTimeout(()=>{void fetch('/api/workspace',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).then(r=>{if(!r.ok)console.error('Workspace save failed',r.status)}).catch(()=>console.error('Workspace save failed'))},450);return()=>clearTimeout(t)},[data,loaded,role])
 
   if(!loaded)return <div className="loading"><HardHat/><b>Loading workspace…</b></div>
-  const go=(s:string)=>{if(s==='Billing & Tokens'){location.href='/subscribe';return}const target=s==='Jobs'?'Projects':s==='Files'?'Documents':s;setSection(target);setActiveJob(null);setToolsOpen(false);setCreateOpen(false);setSearch('');if(typeof window!=='undefined')window.setTimeout(()=>window.scrollTo({top:0,behavior:'auto'}),0)}
+  const go=(s:string)=>{if(s==='Billing & Tokens'){location.href='/subscribe';return}const target=s==='Jobs'?'Projects':s==='Files'?'Documents':s==='Permits'?'Permit Center':s;setSection(target);setActiveJob(null);setToolsOpen(false);setCreateOpen(false);setSearch('');if(typeof window!=='undefined')window.setTimeout(()=>window.scrollTo({top:0,behavior:'auto'}),0)}
   const searchRows=search.trim()?[
     ...data.customers.map((x:any)=>({kind:'Customer',title:x.name||x.customer,detail:x.phone||x.email||x.address||'',target:'Customers'})),
     ...data.projects.map((x:any)=>({kind:'Job',title:x.name,detail:x.customer||'',target:'Projects'})),
