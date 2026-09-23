@@ -10,6 +10,7 @@ import {
 import ContractWorkspace from './components/ContractWorkspace'
 import JobTracker from './components/JobTracker'
 import BlueprintLibrary from './components/BlueprintLibrary'
+import PermitCenter from './components/PermitCenter'
 import ProjectGallery from './components/ProjectGallery'
 import ReceiptOrganizer from './components/ReceiptOrganizer'
 import HQAssistant from './components/HQAssistant'
@@ -24,7 +25,7 @@ const emptyData:AppData={
 }
 const groups=[
   {label:'Work',items:[['Dashboard',Home],['Projects',FolderKanban],['Schedule',CalendarDays],['Customers',Users],['Contact Book',ContactRound]]},
-  {label:'Create',items:[['AI Estimates',Sparkles],['Contracts',FileSignature],['Change Orders',ClipboardList],['Plans Studio',FileText]]},
+  {label:'Create',items:[['AI Estimates',Sparkles],['Contracts',FileSignature],['Change Orders',ClipboardList],['Plans Studio',FileText],['Permit Center',HardHat]]},
   {label:'Money',items:[['Invoices',Receipt],['Receipts',WalletCards],['Billing & Tokens',Coins]]},
   {label:'Business',items:[['Before & After',Camera],['Documents',FileText],['Notes',NotebookPen],['Settings',Settings]]}
 ] as any[]
@@ -56,7 +57,7 @@ export default function Page(){
     ...data.docs.map((x:any)=>({kind:x.type||'Document',title:x.project||x.customer||x.type||'Document',detail:x.customer||'',target:'Documents'})),
     ...data.receipts.map((x:any)=>({kind:'Receipt',title:x.merchant||x.description||'Receipt',detail:[x.customer,x.project].filter(Boolean).join(' · '),target:'Receipts'}))
   ].filter((x:any)=>[x.kind,x.title,x.detail].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,8):[]
-  const createItems=[['Project Setup','Projects'],['Customer','Customers'],['Project','Projects'],['AI Estimate','AI Estimates'],['Invoice','Invoices'],['Receipt','Receipts'],['AI Plan','Plans Studio'],['Contract','Contracts'],['Change Order','Change Orders'],['Contact','Contact Book']] as const
+  const createItems=[['Project Setup','Projects'],['Customer','Customers'],['Project','Projects'],['AI Estimate','AI Estimates'],['Invoice','Invoices'],['Receipt','Receipts'],['AI Plan','Plans Studio'],['Permit','Permit Center'],['Contract','Contracts'],['Change Order','Change Orders'],['Contact','Contact Book']] as const
 
   return <div className="compactShell">
     <header className="topbar">
@@ -83,6 +84,7 @@ export default function Page(){
       {activeJob?<JobTracker project={data.projects.find((p:any)=>p.id===activeJob.id)||activeJob} data={data} setData={setData} onClose={()=>setActiveJob(null)} onCreateInvoice={(p)=>{setInvoiceSourceProject(p);setSection('Invoices');setSearch('');if(typeof window!=='undefined')window.setTimeout(()=>{setActiveJob(null);window.scrollTo({top:0,behavior:'auto'})},0)}}/>:
       section==='Contracts'?<ContractWorkspace data={data} setData={setData} ai={ai}/>:
       section==='Plans Studio'?<BlueprintLibrary data={data} setData={setData} ai={ai}/>:
+      section==='Permit Center'?<PermitCenter data={data} setData={setData}/>:
       section==='Before & After'?<ProjectGallery data={data} setData={setData}/>:
       section==='Receipts'?<ReceiptOrganizer data={data} setData={setData}/>:
       section==='Projects'?<Projects data={data} setData={setData} startJob={setActiveJob}/>:
