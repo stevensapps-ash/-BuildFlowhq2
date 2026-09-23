@@ -1,10 +1,10 @@
 import './globals.css'
+import type { Metadata, Viewport } from 'next'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Construction HQ',
   description: 'The operating system for contractors and construction companies.',
   manifest: '/manifest.webmanifest',
-  themeColor: '#1d252b',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -14,6 +14,10 @@ export const metadata = {
     icon: '/buildflow-icon.svg',
     apple: '/buildflow-icon.svg'
   }
+}
+
+export const viewport: Viewport = {
+  themeColor: '#1d252b'
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
