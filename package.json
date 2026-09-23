@@ -10,7 +10,10 @@
     "mobile:add:ios": "npx cap add ios",
     "mobile:sync": "npx cap sync",
     "mobile:open:android": "npx cap open android",
-    "mobile:open:ios": "npx cap open ios"
+    "mobile:open:ios": "npx cap open ios",
+    "check": "tsc --noEmit",
+    "test": "node tests/live-smoke.mjs",
+    "verify": "npm run check && npm run build"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.1",
