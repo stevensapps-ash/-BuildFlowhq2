@@ -5,7 +5,7 @@ import {
   AlertCircle, CalendarDays, Camera, ChevronDown, ClipboardList, Coins, DollarSign,
   FileSignature, FileText, FolderKanban, HardHat, Home, LogIn, LogOut, Menu,
   NotebookPen, Plus, PlusCircle, Receipt, Settings, Sparkles, Trash2, Users, ContactRound, Phone, Mail,
-  WalletCards, X, Clock3, Search, BriefcaseBusiness, FilePlus2, Upload, FolderOpen
+  WalletCards, X, Clock3, Search, BriefcaseBusiness, FilePlus2, Upload, FolderOpen, Download
 } from 'lucide-react'
 import ContractWorkspace from './components/ContractWorkspace'
 import JobTracker from './components/JobTracker'
