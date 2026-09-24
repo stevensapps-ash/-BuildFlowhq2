@@ -24,7 +24,7 @@ const emptyData:AppData={
 }
 const groups=[
   {label:'Work',items:[['Dashboard',Home],['Projects',FolderKanban],['Schedule',CalendarDays],['Customers',Users],['Contact Book',ContactRound]]},
-  {label:'Create',items:[['AI Estimates',Sparkles],['Contracts',FileSignature],['Change Orders',ClipboardList],['Plans Studio',FileText]]},
+  {label:'Create',items:[['AI Estimates',Sparkles],['Contracts',FileSignature],['Change Orders',ClipboardList],['Plans Studio',FileText],['Permit Center',ClipboardList]]},
   {label:'Money',items:[['Invoices',Receipt],['Receipts',WalletCards],['Billing & Tokens',Coins]]},
   {label:'Business',items:[['Before & After',Camera],['Documents',FileText],['Notes',NotebookPen],['Settings',Settings]]}
 ] as any[]
@@ -56,7 +56,7 @@ export default function Page(){
     ...data.docs.map((x:any)=>({kind:x.type||'Document',title:x.project||x.customer||x.type||'Document',detail:x.customer||'',target:'Documents'})),
     ...data.receipts.map((x:any)=>({kind:'Receipt',title:x.merchant||x.description||'Receipt',detail:[x.customer,x.project].filter(Boolean).join(' · '),target:'Receipts'}))
   ].filter((x:any)=>[x.kind,x.title,x.detail].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,8):[]
-  const createItems=[['Project Setup','Projects'],['Customer','Customers'],['Project','Projects'],['AI Estimate','AI Estimates'],['Invoice','Invoices'],['Receipt','Receipts'],['AI Plan','Plans Studio'],['Contract','Contracts'],['Change Order','Change Orders'],['Contact','Contact Book']] as const
+  const createItems=[['Project Setup','Projects'],['Customer','Customers'],['Project','Projects'],['AI Estimate','AI Estimates'],['Invoice','Invoices'],['Receipt','Receipts'],['AI Plan','Plans Studio'],['Contract','Contracts'],['Change Order','Change Orders'],['Permit','Permit Center'],['Contact','Contact Book']] as const
 
   return <div className="compactShell">
     <header className="topbar">
@@ -92,6 +92,7 @@ export default function Page(){
       section==='Contact Book'?<ContactBook data={data} setData={setData}/>:
       section==='Invoices'?<Invoices data={data} setData={setData} initialProject={invoiceSourceProject} onInitialProjectHandled={()=>setInvoiceSourceProject(null)}/>:
       section==='Change Orders'?<ChangeOrders data={data} setData={setData}/>:
+      section==='Permit Center'?<PermitCenter data={data} setData={setData}/>:
 
       section==='Notes'?<Notes data={data} setData={setData}/>:
       section==='Settings'?<BusinessSettings data={data} setData={setData}/>:
@@ -288,6 +289,24 @@ function ChangeOrders({data,setData}:{data:AppData;setData:(d:any)=>void}){
   function add(){if(!project||!description.trim())return;const p=data.projects.find((x:any)=>x.name===project);setData({...data,docs:[{id:Date.now(),type:'Change Order',project,customer:p?.customer||'',description:description.trim(),amount:Number(amount||0),status:'Awaiting Approval',createdAt:localDate()},...data.docs]});setDescription('');setAmount('')}
   return <div className="workspace"><Head title="Change Orders" text="Document scope and price changes before changed work begins."/><div className="builderGrid"><label>Project<select value={project} onChange={e=>setProject(e.target.value)}><option value="">Select project</option>{data.projects.map((p:any)=><option key={p.id}>{p.name}</option>)}</select></label><Field label="Price change" value={amount} set={setAmount}/><label style={{gridColumn:'1/-1'}}>Change description<textarea value={description} onChange={e=>setDescription(e.target.value)} placeholder="Describe the added, removed, or revised work."/></label><button className="primary" onClick={add}><Plus/>Create Change Order</button></div>
   {rows.length?rows.map((x:any)=><div className="wideRow" key={x.id}><ClipboardList size={18}/><div className="grow"><b>{x.project}</b><span>{x.description}</span></div><strong>{money(x.amount)}</strong><select value={x.status} onChange={e=>setData({...data,docs:data.docs.map((y:any)=>y.id===x.id?{...y,status:e.target.value}:y)})}><option>Awaiting Approval</option><option>Approved</option><option>Declined</option></select></div>):<p>No change orders yet.</p>}</div>
+}
+
+function PermitCenter({data,setData}:{data:AppData;setData:(d:any)=>void}){
+  const[project,setProject]=useState(''),[permitType,setPermitType]=useState('Building'),[jurisdiction,setJurisdiction]=useState(''),[number,setNumber]=useState(''),[notes,setNotes]=useState('')
+  const rows=(data.permits||[]) as any[]
+  const types=['Building','Electrical','Plumbing','Mechanical / HVAC','Demolition','Roofing','Zoning / Planning','Other']
+  const statuses=['Not Started','Requirements','Documents Ready','Ready to Submit','Submitted','Corrections Requested','Approved / Issued','Inspection Scheduled','Finaled / Closed']
+  function add(){if(!project)return;const p=data.projects.find((x:any)=>x.name===project);const permit={id:Date.now(),project,customer:p?.customer||'',address:p?.address||'',permitType,jurisdiction:jurisdiction.trim(),number:number.trim(),status:'Not Started',submittedDate:'',expirationDate:'',inspectionDate:'',inspectionStatus:'',notes:notes.trim(),checklist:{scope:false,contract:false,sitePlan:false,floorPlan:false,electrical:false,plumbing:false,hvac:false,photos:false,license:false,ownerAuthorization:false},createdAt:new Date().toISOString()};setData({...data,permits:[permit,...rows]});setNumber('');setNotes('')}
+  function patch(id:any,key:string,value:any){setData({...data,permits:rows.map((x:any)=>x.id===id?{...x,[key]:value}:x)})}
+  function check(id:any,key:string,value:boolean){setData({...data,permits:rows.map((x:any)=>x.id===id?{...x,checklist:{...(x.checklist||{}),[key]:value}}:x)})}
+  return <div className="workspace"><Head title="Permit Center" text="Track permit requirements, document packages, submissions, corrections, approvals and inspections by project. Always verify requirements, fees and approval status with the applicable local authority."/>
+    <div className="builderGrid"><label>Project<select value={project} onChange={e=>setProject(e.target.value)}><option value="">Select project</option>{data.projects.map((p:any)=><option key={p.id} value={p.name}>{p.customer} — {p.name}</option>)}</select></label><label>Permit type<select value={permitType} onChange={e=>setPermitType(e.target.value)}>{types.map(x=><option key={x}>{x}</option>)}</select></label><Field label="Jurisdiction / city / county" value={jurisdiction} set={setJurisdiction}/><Field label="Application / permit number" value={number} set={setNumber}/><label className="full">Notes<textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Requirements, reviewer contact, corrections, inspection notes…"/></label><button className="primary" onClick={add} disabled={!project}><Plus/>Add Permit Record</button></div>
+    {rows.length?rows.map((x:any)=><div className="dashPanel" style={{marginTop:18}} key={x.id}><div className="dashPanelHead"><div><small>{x.permitType} PERMIT</small><h3>{x.project}</h3><span>{[x.customer,x.address,x.jurisdiction].filter(Boolean).join(' · ')||'Jurisdiction not entered'}</span></div><select aria-label="Permit status" value={x.status||'Not Started'} onChange={e=>patch(x.id,'status',e.target.value)}>{statuses.map(s=><option key={s}>{s}</option>)}</select></div>
+      <div className="builderGrid"><label>Permit / application #<input value={x.number||''} onChange={e=>patch(x.id,'number',e.target.value)}/></label><label>Submitted<input type="date" value={x.submittedDate||''} onChange={e=>patch(x.id,'submittedDate',e.target.value)}/></label><label>Expiration<input type="date" value={x.expirationDate||''} onChange={e=>patch(x.id,'expirationDate',e.target.value)}/></label><label>Inspection date<input type="date" value={x.inspectionDate||''} onChange={e=>patch(x.id,'inspectionDate',e.target.value)}/></label><label>Inspection status<input value={x.inspectionStatus||''} onChange={e=>patch(x.id,'inspectionStatus',e.target.value)} placeholder="Scheduled / passed / correction"/></label><label className="full">Permit notes<textarea value={x.notes||''} onChange={e=>patch(x.id,'notes',e.target.value)}/></label></div>
+      <h3>Permit Packet Checklist</h3><div className="builderGrid">{[['scope','Scope of work'],['contract','Estimate / contract'],['sitePlan','Site plan'],['floorPlan','Floor plan'],['electrical','Electrical / wiring plan'],['plumbing','Plumbing plan'],['hvac','HVAC / mechanical plan'],['photos','Project photos'],['license','Contractor / license information'],['ownerAuthorization','Owner authorization']].map(([k,label])=><label key={k} style={{display:'flex',gap:8,alignItems:'center'}}><input type="checkbox" checked={!!x.checklist?.[k]} onChange={e=>check(x.id,k,e.target.checked)}/>{label}</label>)}</div>
+      <div className="reviewActions"><button type="button" onClick={()=>window.print()}><Download size={16}/> Print / Save Permit Packet</button><button type="button" className="iconButton" aria-label="Delete permit record" onClick={()=>setData({...data,permits:rows.filter((p:any)=>p.id!==x.id)})}><Trash2 size={16}/></button></div><p><small>Planning/AI drawings are conceptual until reviewed and accepted by the applicable authority and any required licensed professional.</small></p>
+    </div>):<p>No permit records yet.</p>}
+  </div>
 }
 
 function Employees({data,setData}:{data:AppData;setData:(d:any)=>void}){
